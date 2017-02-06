@@ -114,7 +114,6 @@ bool RedirectStream(char const* ip, unsigned port, const char *fileName)
         exit(-1);
     }
 
-
     unsigned estBitrate=87543408;
     vSource = vSubsession->createNewStreamSource(0, estBitrate);
     if (vSource == NULL) {

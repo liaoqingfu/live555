@@ -23,37 +23,46 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// FramedFilter //////////
 #include <string.h>
 
-void FramedFilter::detachInputSource() {
-  if (fInputSource != NULL) {
-    fInputSource->stopGettingFrames();
-    reassignInputSource(NULL);
-  }
+void FramedFilter::detachInputSource()
+{
+    if (fInputSource != NULL) {
+        fInputSource->stopGettingFrames();
+        reassignInputSource(NULL);
+    }
 }
 
 FramedFilter::FramedFilter(UsageEnvironment& env,
-			   FramedSource* inputSource)
-  : FramedSource(env),
-    fInputSource(inputSource) {
+    FramedSource* inputSource)
+    : FramedSource(env)
+    , fInputSource(inputSource)
+{
 }
 
-FramedFilter::~FramedFilter() {
-  Medium::close(fInputSource);
+FramedFilter::~FramedFilter()
+{
+    Medium::close(fInputSource);
 }
 
 // Default implementations of needed virtual functions.  These merely
 // call the same function in the input source - i.e., act like a 'null filter
 
-char const* FramedFilter::MIMEtype() const {
-  if (fInputSource == NULL) return "";
+char const* FramedFilter::MIMEtype() const
+{
+    if (fInputSource == NULL)
+        return "";
 
-  return fInputSource->MIMEtype();
+    return fInputSource->MIMEtype();
 }
 
-void FramedFilter::getAttributes() const {
-  if (fInputSource != NULL) fInputSource->getAttributes();
+void FramedFilter::getAttributes() const
+{
+    if (fInputSource != NULL)
+        fInputSource->getAttributes();
 }
 
-void FramedFilter::doStopGettingFrames() {
-  FramedSource::doStopGettingFrames();
-  if (fInputSource != NULL) fInputSource->stopGettingFrames();
+void FramedFilter::doStopGettingFrames()
+{
+    FramedSource::doStopGettingFrames();
+    if (fInputSource != NULL)
+        fInputSource->stopGettingFrames();
 }
