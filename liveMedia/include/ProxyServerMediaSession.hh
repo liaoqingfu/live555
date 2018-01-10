@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2015 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
 // A subclass of "ServerMediaSession" that can be used to create a (unicast) RTSP servers that acts as a 'proxy' for
 // another (unicast or multicast) RTSP/RTP stream.
 // C++ header
@@ -25,6 +25,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _SERVER_MEDIA_SESSION_HH
 #include "ServerMediaSession.hh"
 #endif
+
+#ifndef _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
+#include "OnDemandServerMediaSubsession.hh"
+#endif
+
 #ifndef _MEDIA_SESSION_HH
 #include "MediaSession.hh"
 #endif
@@ -46,7 +51,6 @@ public:
   void continueAfterDESCRIBE(char const* sdpDescription);
   void continueAfterLivenessCommand(int resultCode, Boolean serverSupportsGetParameter);
   void continueAfterSETUP();
-  void continueAfterPLAY(int resultCode);
 
 private:
   void reset();
@@ -115,6 +119,7 @@ public:
     // (This can be used as a 'watch variable' in "doEventLoop()".)
   Boolean describeCompletedSuccessfully() const { return fClientMediaSession != NULL; }
     // This can be used - along with "describeCompletdFlag" - to check whether the back-end "DESCRIBE" completed *successfully*.
+
 
 protected:
   ProxyServerMediaSession(UsageEnvironment& env, RTSPServer* ourRTSPServer,
@@ -208,5 +213,43 @@ private:
 
   struct timeval fPTAdjustment; // Added to (RTCP-synced) subsession presentation times to 'normalize' them with wall-clock time.
 };
+
+
+
+// A "OnDemandServerMediaSubsession" subclass, used to implement a unicast RTSP server that's proxying another RTSP stream:
+
+class ProxyServerMediaSubsession: public OnDemandServerMediaSubsession {
+public:
+  ProxyServerMediaSubsession(MediaSubsession& mediaSubsession);
+  virtual ~ProxyServerMediaSubsession();
+
+  char const* codecName() const { return fClientMediaSubsession.codecName(); }
+
+  char const* mediumName() const { return fClientMediaSubsession.mediumName(); }
+
+  unsigned char rtpPayloadFormat() const { return fClientMediaSubsession.rtpPayloadFormat(); }
+
+/*private*/public: // redefined virtual functions
+  virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
+                                              unsigned& estBitrate);
+  virtual void closeStreamSource(FramedSource *inputSource);
+  virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
+                                    unsigned char rtpPayloadTypeIfDynamic,
+                                    FramedSource* inputSource);
+
+private:
+  static void subsessionByeHandler(void* clientData);
+  void subsessionByeHandler();
+
+  int verbosityLevel() const { return ((ProxyServerMediaSession*)fParentSession)->fVerbosityLevel; }
+
+private:
+  friend class ProxyRTSPClient;
+  MediaSubsession& fClientMediaSubsession; // the 'client' media subsession object that corresponds to this 'server' media subsession
+  ProxyServerMediaSubsession* fNext; // used when we're part of a queue
+  Boolean fHaveSetupStream;
+};
+
+
 
 #endif
