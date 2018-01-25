@@ -12,11 +12,16 @@
 #include "RTSPCommon.hh"
 #include "liveMedia.hh"
 
+char* streamName = "av_stream.sdp"; //流名称，推送到Darwin的流名称必须以.sdp结尾
+#if 1
+char* server = "192.168.22.124"; //RTSP流媒体转发服务器地址，<请修改为自己搭建的流媒体服务器地址>
+int port = 11554; //RTSP流媒体转发服务器端口，<请修改为自己搭建的流媒体服务器端口>
+char* src = "rtsp://admin:admin123@172.16.34.214/av_stream.sdp"; //源端URL
+#else
+char* src = "rtsp://113.108.146.203:10554/679114.sdp"; //源端URL
 char* server = "113.108.146.203"; //RTSP流媒体转发服务器地址，<请修改为自己搭建的流媒体服务器地址>
 int port = 10554; //RTSP流媒体转发服务器端口，<请修改为自己搭建的流媒体服务器端口>
-char* streamName = "av_stream.sdp"; //流名称，推送到Darwin的流名称必须以.sdp结尾
-// char* src = "rtsp://admin:admin123@172.16.34.214/av_stream.sdp"; //源端URL
-char* src = "rtsp://113.108.146.203:10554/679114.sdp"; //源端URL
+#endif
 
 UsageEnvironment* env = NULL; //live555 global environment
 TaskScheduler* scheduler = NULL;
