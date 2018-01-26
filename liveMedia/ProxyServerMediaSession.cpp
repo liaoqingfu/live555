@@ -106,14 +106,13 @@ void ProxyServerMediaSession::continueAfterDESCRIBE(char const* sdpDescription)
     // Create a (client) "MediaSession" object from the stream's SDP description ("resultString"), then iterate through its
     // "MediaSubsession" objects, to set up corresponding "ServerMediaSubsession" objects that we'll use to serve the stream's tracks.
     do {
-        // createNew后会解析sdpDescription，包括初始化fClientMediaSession的codecName(),以及创建MediaSubSession(fOurSession.fSubsessionsHead)
         fClientMediaSession = MediaSession::createNew(envir(), sdpDescription);
         if (fClientMediaSession == NULL)
             break;
 
         MediaSubsessionIterator iter(*fClientMediaSession);
         for (MediaSubsession* mss = iter.next(); mss != NULL; mss = iter.next()) {
-            ServerMediaSubsession* smss = new ProxyServerMediaSubsession(*mss); // 会将上面fClientMediaSession的fSubsessionsHead赋给fClientMediaSession
+            ServerMediaSubsession* smss = new ProxyServerMediaSubsession(*mss);
             addSubsession(smss);
             if (fVerbosityLevel > 0) {
                 envir() << *this << " added new \"ProxyServerMediaSubsession\" for "
@@ -444,8 +443,6 @@ FramedSource* ProxyServerMediaSubsession::createNewStreamSource(unsigned clientS
 
     // If we haven't yet created a data source from our 'media subsession' object, initiate() it to do so:
     if (fClientMediaSubsession.readSource() == NULL) {
-        // fClientMediaSubsession.initiate()里调用createSourceObjects创建rtpSource()及readSource()的返回值("fRTPSource" and "fReadSource"),
-        // 针对H264，调用H264VideoRTPSource::createNew创建
         fClientMediaSubsession.receiveRawMP3ADUs(); // hack for MPA-ROBUST streams
         fClientMediaSubsession.receiveRawJPEGFrames(); // hack for proxying JPEG/RTP streams. (Don't do this if we're transcoding.)
         fClientMediaSubsession.initiate();

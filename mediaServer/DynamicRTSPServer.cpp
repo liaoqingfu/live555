@@ -51,7 +51,6 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
 ServerMediaSession* DynamicRTSPServer ::lookupServerMediaSession(char const* streamName, Boolean isFirstLookupInSession)
 {
     // First, check whether the specified "streamName" exists as a local file:
-    envir() << "lcp-debug DynamicRTSPServer ::lookupServerMediaSession ----> streamName = " << streamName << "!!!!!!!!!!!!\n";
     FILE* fid = fopen(streamName, "rb");
     Boolean fileExists = fid != NULL;
 

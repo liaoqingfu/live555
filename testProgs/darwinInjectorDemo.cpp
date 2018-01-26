@@ -12,16 +12,11 @@
 #include "RTSPCommon.hh"
 #include "liveMedia.hh"
 
-char* streamName = "av_stream.sdp"; //流名称，推送到Darwin的流名称必须以.sdp结尾
-#if 1
 char* server = "192.168.22.124"; //RTSP流媒体转发服务器地址，<请修改为自己搭建的流媒体服务器地址>
 int port = 11554; //RTSP流媒体转发服务器端口，<请修改为自己搭建的流媒体服务器端口>
+char* streamName = "av_stream.sdp"; //流名称，推送到Darwin的流名称必须以.sdp结尾
+//char* src = "rtsp://218.204.223.237:554/live/1/66251FC11353191F/e7ooqwcfbqjoo80j.sdp";	//源端URL
 char* src = "rtsp://admin:admin123@172.16.34.214/av_stream.sdp"; //源端URL
-#else
-char* src = "rtsp://113.108.146.203:10554/679114.sdp"; //源端URL
-char* server = "113.108.146.203"; //RTSP流媒体转发服务器地址，<请修改为自己搭建的流媒体服务器地址>
-int port = 10554; //RTSP流媒体转发服务器端口，<请修改为自己搭建的流媒体服务器端口>
-#endif
 
 UsageEnvironment* env = NULL; //live555 global environment
 TaskScheduler* scheduler = NULL;
@@ -59,17 +54,12 @@ int main(int argc, char** argv)
     scheduler = BasicTaskScheduler::createNew();
     env = BasicUsageEnvironment::createNew(*scheduler);
 
-    // 新建转发SESSION,createNew中会创建ProxyRTSPClient,然后ProxyRTSPClient会调用其父类RTSPClient的sendDescribeCommand给src(下游服务器)
-    // 发送DESCRIBE命令,发完并成功收到src返回的SDP信息后,调用fOurServerMediaSession.continueAfterDESCRIBE,里面调用addSubsession将sms->numSubsessions()的返回值+1
-    // 最后scheduleLivenessCommand()添加发送OPTIONS指令的任务
+    // 新建转发SESSION
     sms = ProxyServerMediaSession::createNew(*env, NULL, src);
 
     // 循环等待转接程序与源端连接成功
     while (sms->numSubsessions() <= 0) {
         char fWatchVariable = 0;
-        // TaskScheduler.scheduleDelayedTask会新建一个AlarmHandler(处理TaskFunc),并将其入队到TaskFunc入队到fDelayQueue队列中,
-        // doEventLoop其中一个操作就是在最后调用fDelayQueue.handleAlarm处理fDelayQueue中任务,具体是等待超时后,将AlarmHandler从fDelayQueue出队,
-        // 然后AlarmHandler处理TaskFunc,最后AlarmHandler再delete自己
         env->taskScheduler().scheduleDelayedTask(2 * 1000000, (TaskFunc*)sleep, &fWatchVariable);
         *env << "before doEventLoop\n";
         env->taskScheduler().doEventLoop(&fWatchVariable);
@@ -114,16 +104,11 @@ bool RedirectStream(char const* ip, unsigned port)
     ServerMediaSubsession* subsession = NULL;
     ServerMediaSubsessionIterator iter(*sms);
     while ((subsession = iter.next()) != NULL) {
-        // iter.next()返回的是ProxyServerMediaSubsession对象,上面创建ProxyServerMediasession时，在连接上下server(如rtsp ipcamera)后，在
-        // continueAfterDESCRIBE里会创建ProxyServerMediaSubsession(作为MediaSession与下游server通信)，
-        // 然后ProxyServerMediasession调用父类的addSubsession添加到ServerMediaSubsessionIterator链表中
         ProxyServerMediaSubsession* proxySubsession = (ProxyServerMediaSubsession*)subsession;
 
         unsigned streamBitrate;
-        // 创建H264VideoRTPSource,给下游server发送SETUP及PLAY指令
         FramedSource* source = proxySubsession->createNewStreamSource(1, streamBitrate);
 
-        *env << "mediumName = " << proxySubsession->mediumName() << "\n";
         if (strcmp(proxySubsession->mediumName(), "video") == 0) {
             // 用ProxyServerMediaSubsession建立Video的RTPSource
             vSource = source;
@@ -137,7 +122,7 @@ bool RedirectStream(char const* ip, unsigned port)
             aSource = source;
             unsigned char rtpPayloadType = proxySubsession->rtpPayloadFormat();
             // 建立Audio的RTPSink
-            aSink = proxySubsession->createNewRTPSink(rtpGroupsockAudio, rtpPayloadType, source);
+            aSink = proxySubsession->createNewRTPSink(rtpGroupsockVideo, rtpPayloadType, source);
             // 将Audio的RTPSink赋值给DarwinInjector，推送音频RTP给Darwin
             injector->addStream(aSink, NULL);
         }

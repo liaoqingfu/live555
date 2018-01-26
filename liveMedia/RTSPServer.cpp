@@ -495,7 +495,6 @@ void RTSPServer::RTSPClientConnection ::handleCmd_DESCRIBE(char const* urlPreSuf
         // Begin by looking up the "ServerMediaSession" object for the specified "urlTotalSuffix":
         session = fOurServer.lookupServerMediaSession(urlTotalSuffix);
         if (session == NULL) {
-            envir() << "lcp-debug RTSPClientConnection ::handleCmd_DESCRIBE ----> handleCmd_notFound, urlTotalSuffix=" << urlTotalSuffix << "\n";
             handleCmd_notFound();
             break;
         }
@@ -802,8 +801,6 @@ void RTSPServer::RTSPClientConnection::handleAlternativeRequestByte(void* instan
 
 void RTSPServer::RTSPClientConnection::handleAlternativeRequestByte1(u_int8_t requestByte)
 {
-
-    envir() << "lcp-debug handleAlternativeRequestByte1 requestByte=" << requestByte << "\n";
     if (requestByte == 0xFF) {
         // Hack: The new handler of the input TCP socket encountered an error reading it.  Indicate this:
         handleRequestBytes(-1);
@@ -876,9 +873,6 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead)
     do {
         RTSPServer::RTSPClientSession* clientSession = NULL;
 
-#ifdef DEBUG
-        fprintf(stderr, "lcp-debug handleRequestBytes(): newBytesRead = %d\n", newBytesRead);
-#endif
         if (newBytesRead < 0 || (unsigned)newBytesRead >= fRequestBufferBytesLeft) {
         // Either the client socket has died, or the request was too big for us.
         // Terminate this connection:
@@ -1395,7 +1389,6 @@ void RTSPServer::RTSPClientConnection ::changeClientInputSocket(int newSocketNum
         for (unsigned i = 0; i < extraDataSize; ++i) {
             ptr[i] = extraData[i];
         }
-        envir() << "lcp-debug changeClientInputSocket handleRequestBytes(=" << extraDataSize << ")\n";
         handleRequestBytes(extraDataSize);
     }
 }

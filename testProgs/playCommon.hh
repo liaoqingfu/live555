@@ -33,7 +33,7 @@ extern void setupSubsession(MediaSubsession* subsession, Boolean streamUsingTCP,
 extern void startPlayingSession(MediaSession* session, double start, double end, float scale, RTSPClient::responseHandler* afterFunc);
 
 extern void startPlayingSession(MediaSession* session, char const* absStartTime, char const* absEndTime, float scale, RTSPClient::responseHandler* afterFunc);
-  // For playing by 'absolute' time (using strings of the form "YYYYMMDDTHHMMSSZ" or "YYYYMMDDTHHMMSS.<frac>Z"
+// For playing by 'absolute' time (using strings of the form "YYYYMMDDTHHMMSSZ" or "YYYYMMDDTHHMMSS.<frac>Z"
 
 extern void tearDownSession(MediaSession* session, RTSPClient::responseHandler* afterFunc);
 
