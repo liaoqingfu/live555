@@ -80,7 +80,6 @@ int main(int argc, char** argv)
 // 推送视频到流媒体服务器
 bool RedirectStream(char const* ip, unsigned port, const char *fileName)
 {
-
     // DarwinInjector主要用于向Darwin推送RTSP/RTP数据
     injector = DarwinInjector::createNew(*env);
 
