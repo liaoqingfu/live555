@@ -1,0 +1,199 @@
+@startuml
+
+class Medium {
+}
+
+
+class GenericMediaServer {
+}
+GenericMediaServer ..|> Medium
+
+
+class ClientConnection {
+}
+ClientConnection <--+ GenericMediaServer
+ClientConnection --> GenericMediaServer
+
+
+class ClientSession {
+}
+ClientSession <--+ GenericMediaServer
+ClientSession --> GenericMediaServer
+
+
+class RTSPServer {
+}
+RTSPServer --|> GenericMediaServer
+RTSPServer --> RTSPClientConnection
+RTSPServer --> RTSPClientSession
+RTSPServer --> ServerMediaSessionIterator
+RTSPServer --> RegisterRequestRecord
+RTSPServer +--> RTSPClientConnection
+RTSPServer +--> RTSPClientSession
+RTSPServer +--> ServerMediaSessionIterator
+
+
+class RegisterRequestRecord {
+}
+RegisterRequestRecord --|> RTSPRegisterSender
+
+
+class RTSPRegisterSender {
+}
+RTSPRegisterSender --|> RTSPClient
+RTSPRegisterSender +--> RequestRecord_REGISTER
+
+
+class RequestRecord_REGISTER {
+}
+RequestRecord_REGISTER --|> RequestRecord
+
+
+class RTSPServerWithREGISTERProxying {
+}
+RTSPServerWithREGISTERProxying --|> RTSPServer
+
+
+class RTSPClientConnection {
+}
+RTSPClientConnection --> ClientConnection
+RTSPClientConnection --> RTSPServer
+RTSPClientConnection +--> ParamsForREGISTER
+
+
+class RTSPClientSession {
+}
+RTSPClientSession --> ClientSession
+RTSPClientSession --> RTSPServer
+
+
+class streamState {
+}
+RTSPClientSession +--> streamState
+
+
+class ServerMediaSessionIterator {
+}
+
+
+class ParamsForREGISTER {
+}
+ParamsForREGISTER --> RTSPClientConnection
+
+
+class RTSPServerSupportingHTTPStreaming {
+}
+RTSPServerSupportingHTTPStreaming --|> RTSPServer
+RTSPServerSupportingHTTPStreaming +--> RTSPClientConnectionSupportingHTTPStreaming
+
+
+class RTSPClientConnectionSupportingHTTPStreaming {
+}
+RTSPClientConnectionSupportingHTTPStreaming --|> RTSPClientConnection
+
+
+class DynamicRTSPServer {
+}
+DynamicRTSPServer --|> RTSPServerSupportingHTTPStreaming
+
+
+class RTSPClient {
+}
+RTSPClient --|> Medium
+RTSPClient +--> RequestQueue
+RTSPClient +--> RequestRecord
+
+
+class HandlerServerForREGISTERCommand {
+}
+HandlerServerForREGISTERCommand --|> RTSPServer
+
+
+class RequestQueue {
+}
+
+
+class RequestRecord {
+}
+
+
+class ProxyRTSPClient {
+}
+ProxyRTSPClient --|> RTSPClient
+ProxyRTSPClient --> ProxyServerMediaSession
+ProxyRTSPClient --> ProxyServerMediaSubsession
+
+
+class ServerMediaSession {
+}
+ServerMediaSession --|> Medium
+ServerMediaSession --> ServerMediaSubsessionIterator
+
+
+class ServerMediaSubsession {
+}
+ServerMediaSubsession --|> Medium
+ServerMediaSubsession --> ServerMediaSession
+ServerMediaSubsession --> ServerMediaSubsessionIterator
+
+
+class ServerMediaSubsessionIterator {
+}
+
+
+class ProxyServerMediaSession {
+}
+ProxyServerMediaSession --|> ServerMediaSession
+ProxyServerMediaSession --> ProxyRTSPClient
+ProxyServerMediaSession --> ProxyServerMediaSubsession
+
+
+class MediaSource {
+}
+MediaSource --|> Medium
+
+
+class FramedSource {
+}
+FramedSource --|> MediaSource
+
+
+class FramedFilter {
+}
+FramedFilter --|> FramedSource
+
+
+class PresentationTimeSubsessionNormalizer {
+}
+PresentationTimeSubsessionNormalizer --|> FramedFilter
+PresentationTimeSubsessionNormalizer --> PresentationTimeSessionNormalizer
+
+
+class PresentationTimeSessionNormalizer {
+}
+PresentationTimeSessionNormalizer --|> Medium
+PresentationTimeSessionNormalizer --> PresentationTimeSubsessionNormalizer
+
+
+class OnDemandServerMediaSubsession {
+}
+OnDemandServerMediaSubsession --|> ServerMediaSubsession
+OnDemandServerMediaSubsession --> StreamState
+
+
+class Destinations {
+}
+
+
+class StreamState {
+}
+StreamState --> Destinations
+
+
+class ProxyServerMediaSubsession {
+}
+ProxyServerMediaSubsession --|> OnDemandServerMediaSubsession
+ProxyServerMediaSubsession --> ProxyRTSPClient
+
+
+@enduml
