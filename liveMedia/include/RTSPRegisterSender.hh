@@ -25,53 +25,53 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPClient.hh"
 #endif
 
-class RTSPRegisterSender: public RTSPClient {
+class RTSPRegisterSender : public RTSPClient {
 public:
-  static RTSPRegisterSender*
-  createNew(UsageEnvironment& env,
-	    char const* remoteClientNameOrAddress, portNumBits remoteClientPortNum, char const* rtspURLToRegister,
-	    RTSPClient::responseHandler* rtspResponseHandler, Authenticator* authenticator = NULL,
-	    Boolean requestStreamingViaTCP = False, char const* proxyURLSuffix = NULL, Boolean reuseConnection = False,
-	    int verbosityLevel = 0, char const* applicationName = NULL);
+    static RTSPRegisterSender*
+    createNew(UsageEnvironment& env,
+        char const* remoteClientNameOrAddress, portNumBits remoteClientPortNum, char const* rtspURLToRegister,
+        RTSPClient::responseHandler* rtspResponseHandler, Authenticator* authenticator = NULL,
+        Boolean requestStreamingViaTCP = False, char const* proxyURLSuffix = NULL, Boolean reuseConnection = False,
+        int verbosityLevel = 0, char const* applicationName = NULL);
 
-  void grabConnection(int& sock, struct sockaddr_in& remoteAddress); // so that the socket doesn't get closed when we're deleted
+    void grabConnection(int& sock, struct sockaddr_in& remoteAddress); // so that the socket doesn't get closed when we're deleted
 
 protected:
-  RTSPRegisterSender(UsageEnvironment& env,
-		     char const* remoteClientNameOrAddress, portNumBits remoteClientPortNum, char const* rtspURLToRegister,
-		     RTSPClient::responseHandler* rtspResponseHandler, Authenticator* authenticator,
-		     Boolean requestStreamingViaTCP, char const* proxyURLSuffix, Boolean reuseConnection,
-		     int verbosityLevel, char const* applicationName);
+    RTSPRegisterSender(UsageEnvironment& env,
+        char const* remoteClientNameOrAddress, portNumBits remoteClientPortNum, char const* rtspURLToRegister,
+        RTSPClient::responseHandler* rtspResponseHandler, Authenticator* authenticator,
+        Boolean requestStreamingViaTCP, char const* proxyURLSuffix, Boolean reuseConnection,
+        int verbosityLevel, char const* applicationName);
     // called only by "createNew()"
-  virtual ~RTSPRegisterSender();
+    virtual ~RTSPRegisterSender();
 
-  // Redefined virtual functions:
-  virtual Boolean setRequestFields(RequestRecord* request,
-                                   char*& cmdURL, Boolean& cmdURLWasAllocated,
-                                   char const*& protocolStr,
-                                   char*& extraHeaders, Boolean& extraHeadersWereAllocated);
+    // Redefined virtual functions:
+    virtual Boolean setRequestFields(RequestRecord* request,
+        char*& cmdURL, Boolean& cmdURLWasAllocated,
+        char const*& protocolStr,
+        char*& extraHeaders, Boolean& extraHeadersWereAllocated);
 
 public: // Some compilers complain if this is "protected:"
-  // A subclass of "RTSPClient::RequestRecord", specific to our "REGISTER" command:
-  class RequestRecord_REGISTER: public RTSPClient::RequestRecord {
-  public:
-    RequestRecord_REGISTER(unsigned cseq, RTSPClient::responseHandler* rtspResponseHandler, char const* rtspURLToRegister,
-			   Boolean reuseConnection, Boolean requestStreamingViaTCP, char const* proxyURLSuffix);
-    virtual ~RequestRecord_REGISTER();
+    // A subclass of "RTSPClient::RequestRecord", specific to our "REGISTER" command:
+    class RequestRecord_REGISTER : public RTSPClient::RequestRecord {
+    public:
+        RequestRecord_REGISTER(unsigned cseq, RTSPClient::responseHandler* rtspResponseHandler, char const* rtspURLToRegister,
+            Boolean reuseConnection, Boolean requestStreamingViaTCP, char const* proxyURLSuffix);
+        virtual ~RequestRecord_REGISTER();
 
-    char const* rtspURLToRegister() const { return fRTSPURLToRegister; }
-    Boolean reuseConnection() const { return fReuseConnection; }
-    Boolean requestStreamingViaTCP() const { return fRequestStreamingViaTCP; }
-    char const* proxyURLSuffix() const { return fProxyURLSuffix; }
+        char const* rtspURLToRegister() const { return fRTSPURLToRegister; }
+        Boolean reuseConnection() const { return fReuseConnection; }
+        Boolean requestStreamingViaTCP() const { return fRequestStreamingViaTCP; }
+        char const* proxyURLSuffix() const { return fProxyURLSuffix; }
 
-  private:
-    char* fRTSPURLToRegister;
-    Boolean fReuseConnection, fRequestStreamingViaTCP;
-    char* fProxyURLSuffix;
-  };
+    private:
+        char* fRTSPURLToRegister;
+        Boolean fReuseConnection, fRequestStreamingViaTCP;
+        char* fProxyURLSuffix;
+    };
 
 private:
-  portNumBits fRemoteClientPortNum;
+    portNumBits fRemoteClientPortNum;
 };
 
 #endif
