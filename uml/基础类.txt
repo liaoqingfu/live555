@@ -1,0 +1,126 @@
+@startuml
+class UsageEnvironment {
+    + Boolean reclaim();
+    + TaskScheduler& taskScheduler();
+    + typedef char const* MsgString;
+    + virtual MsgString getResultMsg() const = 0;
+    + virtual void setResultMsg(MsgString msg);
+    + virtual void setResultMsg(MsgString msg1, MsgString msg2) = 0;
+    + virtual void setResultMsg(MsgString msg1, MsgString msg2, MsgString msg3) = 0;
+    + virtual void setResultErrMsg(MsgString msg, int err = 0) = 0;
+    + virtual void appendToResultMsg(MsgString msg) = 0;
+    + virtual void reportBackgroundError() = 0;
+    + virtual void internalError(); 
+    + virtual int getErrno() const = 0;
+    + virtual UsageEnvironment& operator<<(char const* str) = 0;
+    + virtual UsageEnvironment& operator<<(int i) = 0;
+    + virtual UsageEnvironment& operator<<(unsigned u) = 0;
+    + virtual UsageEnvironment& operator<<(double d) = 0;
+    + virtual UsageEnvironment& operator<<(void* p) = 0;
+    + void* liveMediaPriv;
+    + void* groupsockPriv;
+    # UsageEnvironment(TaskScheduler& scheduler);
+    # virtual ~UsageEnvironment();
+    - TaskScheduler& fScheduler;
+}
+
+
+class TaskScheduler {
+    + virtual ~TaskScheduler();
+    + virtual TaskToken scheduleDelayedTask(int64_t microseconds, TaskFunc* proc, void* clientData) = 0;
+    + virtual void unscheduleDelayedTask(TaskToken& prevTask) = 0;
+    + virtual void rescheduleDelayedTask(TaskToken& task, int64_t microseconds, TaskFunc* proc, void* clientData);
+    + typedef void BackgroundHandlerProc(void* clientData, int mask);
+    + virtual void setBackgroundHandling(int socketNum, int conditionSet, BackgroundHandlerProc* handlerProc, void* clientData) = 0;
+    + void disableBackgroundHandling(int socketNum) { setBackgroundHandling(socketNum, 0, NULL, NULL); }
+    + virtual void moveSocketHandling(int oldSocketNum, int newSocketNum) = 0;
+    + virtual void doEventLoop(char* watchVariable = NULL) = 0;
+    + virtual EventTriggerId createEventTrigger(TaskFunc* eventHandlerProc) = 0;
+    + virtual void deleteEventTrigger(EventTriggerId eventTriggerId) = 0;
+    + virtual void triggerEvent(EventTriggerId eventTriggerId, void* clientData = NULL) = 0;
+    + void turnOnBackgroundReadHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData);        
+    + void turnOffBackgroundReadHandling(int socketNum) { disableBackgroundHandling(socketNum); }
+    + virtual void internalError(); // used to 'handle' a 'should not occur'-type error condition within the library.
+    # TaskScheduler();
+}
+TaskScheduler <-- UsageEnvironment
+
+
+class BasicUsageEnvironment0 {
+    + virtual MsgString getResultMsg() const;
+    + virtual void setResultMsg(MsgString msg);
+    + virtual void setResultMsg(MsgString msg1,
+        MsgString msg2);
+    + virtual void setResultMsg(MsgString msg1,
+        MsgString msg2,
+        MsgString msg3);
+    + virtual void setResultErrMsg(MsgString msg, int err = 0);
+    + virtual void appendToResultMsg(MsgString msg);
+    + virtual void reportBackgroundError();
+    # BasicUsageEnvironment0(TaskScheduler& taskScheduler);
+    # virtual ~BasicUsageEnvironment0();
+    - void reset();
+    - char fResultMsgBuffer[RESULT_MSG_BUFFER_MAX];
+    - unsigned fCurBufferSize;
+    - unsigned fBufferMaxSize;
+}
+UsageEnvironment <|.. BasicUsageEnvironment0
+
+
+class BasicTaskScheduler0 {
+    + virtual ~BasicTaskScheduler0();
+    + virtual void SingleStep(unsigned maxDelayTime = 0) = 0;
+    + virtual TaskToken scheduleDelayedTask(int64_t microseconds, TaskFunc* proc,
+    +     void* clientData);
+    + virtual void unscheduleDelayedTask(TaskToken& prevTask);
+    + virtual void doEventLoop(char* watchVariable);
+    + virtual EventTriggerId createEventTrigger(TaskFunc* eventHandlerProc);
+    + virtual void deleteEventTrigger(EventTriggerId eventTriggerId);
+    + virtual void triggerEvent(EventTriggerId eventTriggerId, void* clientData = NULL);
+    # BasicTaskScheduler0();
+    # DelayQueue fDelayQueue;
+    # HandlerSet* fHandlers;
+    # int fLastHandledSocketNum;
+    # EventTriggerId fTriggersAwaitingHandling, fLastUsedTriggerMask; // implemented as 32-bit bitmaps
+    # TaskFunc* fTriggeredEventHandlers[MAX_NUM_EVENT_TRIGGERS];
+    # void* fTriggeredEventClientDatas[MAX_NUM_EVENT_TRIGGERS];
+    # unsigned fLastUsedTriggerNum; // in the range [0,MAX_NUM_EVENT_TRIGGERS)
+}
+TaskScheduler <|.. BasicTaskScheduler0
+
+
+class BasicUsageEnvironment {
+    + static BasicUsageEnvironment* createNew(TaskScheduler& taskScheduler);
+    + virtual int getErrno() const;
+    + virtual UsageEnvironment& operator<<(char const* str);
+    + virtual UsageEnvironment& operator<<(int i);
+    + virtual UsageEnvironment& operator<<(unsigned u);
+    + virtual UsageEnvironment& operator<<(double d);
+    + virtual UsageEnvironment& operator<<(void* p);
+    # BasicUsageEnvironment(TaskScheduler& taskScheduler);
+    # virtual ~BasicUsageEnvironment();
+}
+BasicUsageEnvironment0 <|.. BasicUsageEnvironment
+
+
+class BasicTaskScheduler {
+    + static BasicTaskScheduler* createNew(unsigned maxSchedulerGranularity = 10000 /*microseconds*/);
+    + virtual ~BasicTaskScheduler();
+    # BasicTaskScheduler(unsigned maxSchedulerGranularity);
+    # static void schedulerTickTask(void* clientData);
+    # void schedulerTickTask();
+    # virtual void SingleStep(unsigned maxDelayTime);
+    # virtual void setBackgroundHandling(int socketNum, int conditionSet, BackgroundHandlerProc* handlerProc, void* clientData);
+    # virtual void moveSocketHandling(int oldSocketNum, int newSocketNum);
+    # unsigned fMaxSchedulerGranularity;
+    # int fMaxNumSockets;
+    # fd_set fReadSet;
+    # fd_set fWriteSet;
+    # fd_set fExceptionSet;
+    - int fDummySocketNum;//ifdef "defined(__WIN32__) || defined(_WIN32)"
+    
+}
+BasicTaskScheduler0 <|.. BasicTaskScheduler
+
+
+@enduml
