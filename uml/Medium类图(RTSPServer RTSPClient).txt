@@ -1,12 +1,11 @@
 @startuml
 
-
 class Medium {
     + static Boolean lookupByName(UsageEnvironment& env, char const* mediumName, Medium*& resultMedium);
     + static void close(UsageEnvironment& env, char const* mediumName);
-    + static void close(Medium* medium); // alternative close() method using ptrs
-    + UsageEnvironment& envir() const { return fEnviron; }
-    + char const* name() const { return fMediumName; }
+    + static void close(Medium* medium);
+    + UsageEnvironment& envir() const;
+    + char const* name() const;
     + virtual Boolean isSource() const;
     + virtual Boolean isSink() const;
     + virtual Boolean isRTCPInstance() const;
@@ -27,8 +26,7 @@ class Medium {
 
 class GenericMediaServer {
     + void addServerMediaSession(ServerMediaSession* serverMediaSession);
-    + virtual ServerMediaSession*
-    + lookupServerMediaSession(char const* streamName, Boolean isFirstLookupInSession = True);
+    + virtual ServerMediaSession* lookupServerMediaSession(char const* streamName, Boolean isFirstLookupInSession = True);
     + void removeServerMediaSession(ServerMediaSession* serverMediaSession);
     + void removeServerMediaSession(char const* streamName);
     + void closeAllClientSessionsForServerMediaSession(ServerMediaSession* serverMediaSession);
@@ -49,7 +47,7 @@ class GenericMediaServer {
     # HashTable* fClientConnections;
     # HashTable* fClientSessions;
 }
-Medium <|.. GenericMediaServer
+GenericMediaServer ..|> Medium
 
 
 class ClientConnection {
@@ -69,20 +67,22 @@ class ClientConnection {
     # unsigned char fResponseBuffer[RESPONSE_BUFFER_SIZE];
     # unsigned fRequestBytesAlreadySeen, fRequestBufferBytesLeft;
 }
-GenericMediaServer +--> ClientConnection
+ClientConnection <--+ GenericMediaServer
+ClientConnection --> GenericMediaServer
 
 
 class ClientSession {
     + ClientSession(GenericMediaServer& ourServer, u_int32_t sessionId);
     + virtual ~ClientSession();
-    + UsageEnvironment& envir() { return fOurServer.envir(); }
+    + UsageEnvironment& envir();
 
     # friend class GenericMediaServer;
     # GenericMediaServer& fOurServer;
     # u_int32_t fOurSessionId;
     # ServerMediaSession* fOurServerMediaSession;
 }
-GenericMediaServer +--> ClientSession
+ClientSession <--+ GenericMediaServer
+ClientSession --> GenericMediaServer
 
 
 class RTSPServer {
@@ -140,7 +140,67 @@ class RTSPServer {
     - unsigned fReclamationTestSeconds;
     - Boolean fAllowStreamingRTPOverTCP;
 }
-GenericMediaServer <|.. RTSPServer
+RTSPServer --|> GenericMediaServer
+RTSPServer --> RTSPClientConnection
+RTSPServer --> RTSPClientSession
+RTSPServer --> ServerMediaSessionIterator
+RTSPServer --> RegisterRequestRecord
+RTSPServer +--> RTSPClientConnection
+RTSPServer +--> RTSPClientSession
+RTSPServer +--> ServerMediaSessionIterator
+
+
+class RegisterRequestRecord {
+    + RegisterRequestRecord(RTSPServer& ourServer, unsigned requestId,
+        char const* remoteClientNameOrAddress, portNumBits remoteClientPortNum, char const* rtspURLToRegister,
+        RTSPServer::responseHandlerForREGISTER* responseHandler, Authenticator* authenticator,
+        Boolean requestStreamingViaTCP, char const* proxyURLSuffix);
+    + virtual ~RegisterRequestRecord();
+    + void handleResponse(int resultCode, char* resultString);
+    - RTSPServer& fOurServer;
+    - unsigned fRequestId;
+    - RTSPServer::responseHandlerForREGISTER* fResponseHandler;
+}
+RegisterRequestRecord --|> RTSPRegisterSender
+
+
+class RTSPRegisterSender {
+    + static RTSPRegisterSender*
+    + createNew(UsageEnvironment& env,
+        char const* remoteClientNameOrAddress, portNumBits remoteClientPortNum, char const* rtspURLToRegister,
+        RTSPClient::responseHandler* rtspResponseHandler, Authenticator* authenticator = NULL,
+        Boolean requestStreamingViaTCP = False, char const* proxyURLSuffix = NULL, Boolean reuseConnection = False,
+        int verbosityLevel = 0, char const* applicationName = NULL);
+    + void grabConnection(int& sock, struct sockaddr_in& remoteAddress); // so that the socket doesn't get closed when we're deleted
+    # RTSPRegisterSender(UsageEnvironment& env,
+                char const* remoteClientNameOrAddress, portNumBits remoteClientPortNum, char const* rtspURLToRegister,
+                RTSPClient::responseHandler* rtspResponseHandler, Authenticator* authenticator,
+                Boolean requestStreamingViaTCP, char const* proxyURLSuffix, Boolean reuseConnection,
+                int verbosityLevel, char const* applicationName);
+    # virtual ~RTSPRegisterSender();
+    # virtual Boolean setRequestFields(RequestRecord* request,
+                                    char*& cmdURL, Boolean& cmdURLWasAllocated,
+                                    char const*& protocolStr,
+                                    char*& extraHeaders, Boolean& extraHeadersWereAllocated);
+    - portNumBits fRemoteClientPortNum;
+}
+RTSPRegisterSender --|> RTSPClient
+RTSPRegisterSender +--> RequestRecord_REGISTER
+
+
+class RequestRecord_REGISTER {
+    + RequestRecord_REGISTER(unsigned cseq, RTSPClient::responseHandler* rtspResponseHandler, char const* rtspURLToRegister,
+                  Boolean reuseConnection, Boolean requestStreamingViaTCP, char const* proxyURLSuffix);
+    + virtual ~RequestRecord_REGISTER();
+    + char const* rtspURLToRegister() const { return fRTSPURLToRegister; }
+    + Boolean reuseConnection() const { return fReuseConnection; }
+    + Boolean requestStreamingViaTCP() const { return fRequestStreamingViaTCP; }
+    + char const* proxyURLSuffix() const { return fProxyURLSuffix; }
+    - char* fRTSPURLToRegister;
+    - Boolean fReuseConnection, fRequestStreamingViaTCP;
+    - char* fProxyURLSuffix;
+}
+RequestRecord_REGISTER --|> RequestRecord
 
 
 class RTSPServerWithREGISTERProxying {
@@ -167,7 +227,7 @@ class RTSPServerWithREGISTERProxying {
     - char* fAllowedCommandNames;
     - UserAuthenticationDatabase* fAuthDBForREGISTER;
 }
-RTSPServer <|-- RTSPServerWithREGISTERProxying
+RTSPServerWithREGISTERProxying --|> RTSPServer
 
 
 class RTSPClientConnection {
@@ -219,8 +279,9 @@ class RTSPClientConnection {
     # char* fOurSessionCookie;
     # unsigned fBase64RemainderCount;
 }
-RTSPServer +--> RTSPClientConnection
-ClientConnection <|-- RTSPClientConnection
+RTSPClientConnection --> ClientConnection
+RTSPClientConnection --> RTSPServer
+RTSPClientConnection +--> ParamsForREGISTER
 
 
 class RTSPClientSession {
@@ -259,8 +320,8 @@ class RTSPClientSession {
     # TaskToken fLivenessCheckTask;
     # unsigned fNumStreamStates;
 }
-RTSPServer +--> RTSPClientSession
-ClientSession <|-- RTSPClientSession
+RTSPClientSession --> ClientSession
+RTSPClientSession --> RTSPServer
 
 
 class streamState {
@@ -277,7 +338,6 @@ class ServerMediaSessionIterator {
     + ServerMediaSession* next();
     - HashTable::Iterator* fOurIterator;
 }
-RTSPServer +--> ServerMediaSessionIterator
 
 
 class ParamsForREGISTER {
@@ -291,14 +351,13 @@ class ParamsForREGISTER {
     - Boolean fReuseConnection, fDeliverViaTCP;
     - char* fProxyURLSuffix;
 }
-RTSPClientConnection +--> ParamsForREGISTER
+ParamsForREGISTER --> RTSPClientConnection
 
 
 class RTSPServerSupportingHTTPStreaming {
     + static RTSPServerSupportingHTTPStreaming* createNew(UsageEnvironment& env, Port rtspPort = 554,
         UserAuthenticationDatabase* authDatabase = NULL,
         unsigned reclamationTestSeconds = 65);
-
     + Boolean setHTTPPort(Port httpPort) { return setUpTunnelingOverHTTP(httpPort); }
     # RTSPServerSupportingHTTPStreaming(UsageEnvironment& env,
         int ourSocket, Port ourPort,
@@ -307,7 +366,8 @@ class RTSPServerSupportingHTTPStreaming {
     # virtual ~RTSPServerSupportingHTTPStreaming();
     # virtual RTSPClientConnection* createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr);
 }
-RTSPServer <|-- RTSPServerSupportingHTTPStreaming
+RTSPServerSupportingHTTPStreaming --|> RTSPServer
+RTSPServerSupportingHTTPStreaming +--> RTSPClientConnectionSupportingHTTPStreaming
 
 
 class RTSPClientConnectionSupportingHTTPStreaming {
@@ -320,8 +380,7 @@ class RTSPClientConnectionSupportingHTTPStreaming {
     - ByteStreamMemoryBufferSource* fPlaylistSource;
     - TCPStreamSink* fTCPSink;
 }
-RTSPServerSupportingHTTPStreaming +--> RTSPClientConnectionSupportingHTTPStreaming
-RTSPClientConnection <|-- RTSPClientConnectionSupportingHTTPStreaming
+RTSPClientConnectionSupportingHTTPStreaming --|> RTSPClientConnection
 
 
 class DynamicRTSPServer {
@@ -334,7 +393,7 @@ class DynamicRTSPServer {
     # virtual ServerMediaSession*
     # lookupServerMediaSession(char const* streamName, Boolean isFirstLookupInSession);
 }
-RTSPServerSupportingHTTPStreaming <|-- DynamicRTSPServer
+DynamicRTSPServer --|> RTSPServerSupportingHTTPStreaming
 
 
 class RTSPClient {
@@ -465,7 +524,29 @@ class RTSPClient {
     - unsigned fSessionCookieCounter;
     - Boolean fHTTPTunnelingConnectionIsPending;
 }
-Medium <|.. RTSPClient
+RTSPClient --|> Medium
+RTSPClient +--> RequestQueue
+RTSPClient +--> RequestRecord
+
+
+class HandlerServerForREGISTERCommand {
+    + static HandlerServerForREGISTERCommand* createNew(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc,
+        Port ourPort = 0, UserAuthenticationDatabase* authDatabase = NULL,
+        int verbosityLevel = 0, char const* applicationName = NULL);
+    # HandlerServerForREGISTERCommand(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc, int ourSocket, Port ourPort,
+        UserAuthenticationDatabase* authDatabase, int verbosityLevel, char const* applicationName);
+    # virtual ~HandlerServerForREGISTERCommand();
+    # virtual RTSPClient* createNewRTSPClient(char const* rtspURL, int verbosityLevel, char const* applicationName,
+        int socketNumToServer);
+    # virtual char const* allowedCommandNames(); // we support "OPTIONS" and "REGISTER" only
+    # virtual Boolean weImplementREGISTER(char const* proxyURLSuffix, char*& responseStr); // redefined to return True
+    # virtual void implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer,
+        Boolean deliverViaTCP, char const* proxyURLSuffix);
+    - onRTSPClientCreationFunc* fCreationFunc;
+    - int fVerbosityLevel;
+    - char* fApplicationName;
+}
+HandlerServerForREGISTERCommand --|> RTSPServer
 
 
 class RequestQueue {
@@ -480,7 +561,6 @@ class RequestQueue {
     - RequestRecord* fHead;
     - RequestRecord* fTail;
 }
-RTSPClient *-- RequestQueue
 
 
 class RequestRecord {
@@ -516,7 +596,6 @@ class RequestRecord {
     - char* fContentStr;
     - responseHandler* fHandler;
 }
-RTSPClient *-- RequestRecord
 
 
 class ProxyRTSPClient {
@@ -547,7 +626,7 @@ class ProxyRTSPClient {
     - Boolean fServerSupportsGetParameter, fLastCommandWasPLAY;
     - TaskToken fLivenessCommandTask, fDESCRIBECommandTask, fSubsessionTimerTask;
 }
-RTSPClient <|-- ProxyRTSPClient
+ProxyRTSPClient --|> RTSPClient
 ProxyRTSPClient --> ProxyServerMediaSession
 ProxyRTSPClient --> ProxyServerMediaSubsession
 
@@ -591,7 +670,8 @@ class ServerMediaSession {
     - unsigned fReferenceCount;
     - Boolean fDeleteWhenUnreferenced;
 }
-Medium <|.. ServerMediaSession
+ServerMediaSession --|> Medium
+ServerMediaSession --> ServerMediaSubsessionIterator
 
 
 class ServerMediaSubsession {
@@ -646,8 +726,9 @@ class ServerMediaSubsession {
     - unsigned fTrackNumber;
     - char const* fTrackId;
 }
-Medium <|.. ServerMediaSubsession
-
+ServerMediaSubsession --|> Medium
+ServerMediaSubsession --> ServerMediaSession
+ServerMediaSubsession --> ServerMediaSubsessionIterator
 
 
 class ServerMediaSubsessionIterator {
@@ -658,7 +739,6 @@ class ServerMediaSubsessionIterator {
     - ServerMediaSession& fOurSession;
     - ServerMediaSubsession* fNextPtr;
 }
-ServerMediaSubsessionIterator <--ServerMediaSubsession
 
 
 class ProxyServerMediaSession {
@@ -692,9 +772,30 @@ class ProxyServerMediaSession {
     - class PresentationTimeSessionNormalizer* fPresentationTimeSessionNormalizer;
     - createNewProxyRTSPClientFunc* fCreateNewProxyRTSPClientFunc;
 }
-ServerMediaSession <|-- ProxyServerMediaSession
-ProxyServerMediaSession --> ProxyServerMediaSubsession
+ProxyServerMediaSession --|> ServerMediaSession
 ProxyServerMediaSession --> ProxyRTSPClient
+ProxyServerMediaSession --> ProxyServerMediaSubsession
+
+
+class MediaSource {
+    + static Boolean lookupByName(UsageEnvironment& env, char const* sourceName,
+                    MediaSource*& resultSource);
+    + virtual void getAttributes() const;
+    + virtual char const* MIMEtype() const;
+    + virtual Boolean isFramedSource() const;
+    + virtual Boolean isRTPSource() const;
+    + virtual Boolean isMPEG1or2VideoStreamFramer() const;
+    + virtual Boolean isMPEG4VideoStreamFramer() const;
+    + virtual Boolean isH264VideoStreamFramer() const;
+    + virtual Boolean isH265VideoStreamFramer() const;
+    + virtual Boolean isDVVideoStreamFramer() const;
+    + virtual Boolean isJPEGVideoSource() const;
+    + virtual Boolean isAMRAudioSource() const;
+    # MediaSource(UsageEnvironment& env); // abstract base class
+    # virtual ~MediaSource();
+    - virtual Boolean isSource() const;
+}
+MediaSource --|> Medium
 
 
 class FramedSource {
@@ -733,6 +834,7 @@ class FramedSource {
     - void* fOnCloseClientData;
     - Boolean fIsCurrentlyAwaitingData;
 }
+FramedSource --|> MediaSource
 
 
 class FramedFilter {
@@ -746,7 +848,7 @@ class FramedFilter {
     # virtual void doStopGettingFrames();
     # FramedSource* fInputSource;
 }
-FramedSource <|.. FramedFilter
+FramedFilter --|> FramedSource
 
 
 class PresentationTimeSubsessionNormalizer {
@@ -765,7 +867,8 @@ class PresentationTimeSubsessionNormalizer {
     - char const* fCodecName;
     - PresentationTimeSubsessionNormalizer* fNext;
 }
-FramedFilter <|-- PresentationTimeSubsessionNormalizer
+PresentationTimeSubsessionNormalizer --|> FramedFilter
+PresentationTimeSubsessionNormalizer --> PresentationTimeSessionNormalizer
 
 
 class PresentationTimeSessionNormalizer {
@@ -782,7 +885,8 @@ class PresentationTimeSessionNormalizer {
     - PresentationTimeSubsessionNormalizer* fMasterSSNormalizer;
     - struct timeval fPTAdjustment;
 }
-Medium <|-- PresentationTimeSessionNormalizer
+PresentationTimeSessionNormalizer --|> Medium
+PresentationTimeSessionNormalizer --> PresentationTimeSubsessionNormalizer
 
 
 class OnDemandServerMediaSubsession {
@@ -853,7 +957,8 @@ class OnDemandServerMediaSubsession {
     # void* fAppHandlerClientData;
     # friend class StreamState;
 }
-ServerMediaSubsession <|-- OnDemandServerMediaSubsession
+OnDemandServerMediaSubsession --|> ServerMediaSubsession
+OnDemandServerMediaSubsession --> StreamState
 
 
 class Destinations {
@@ -868,8 +973,6 @@ class Destinations {
     + int tcpSocketNum;
     + unsigned char rtpChannelId, rtcpChannelId;
 }
-Destinations <-- OnDemandServerMediaSubsession
-Destinations <-- StreamState
 
 
 class StreamState {
@@ -910,7 +1013,7 @@ class StreamState {
     + Groupsock* fRTPgs;
     + Groupsock* fRTCPgs;
 }
-StreamState <-- OnDemandServerMediaSubsession
+StreamState --> Destinations
 
 
 class ProxyServerMediaSubsession {
@@ -933,28 +1036,8 @@ class ProxyServerMediaSubsession {
     - ProxyServerMediaSubsession* fNext; // used when we're part of a queue
     - Boolean fHaveSetupStream;
 }
-OnDemandServerMediaSubsession <|-- ProxyServerMediaSubsession
-
-
-class HandlerServerForREGISTERCommand {
-    + static HandlerServerForREGISTERCommand* createNew(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc,
-        Port ourPort = 0, UserAuthenticationDatabase* authDatabase = NULL,
-        int verbosityLevel = 0, char const* applicationName = NULL);
-    + portNumBits serverPortNum() const { return ntohs(fServerPort.num()); }
-    # HandlerServerForREGISTERCommand(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc, int ourSocket, Port ourPort,
-        UserAuthenticationDatabase* authDatabase, int verbosityLevel, char const* applicationName);
-    # virtual ~HandlerServerForREGISTERCommand();
-    # virtual RTSPClient* createNewRTSPClient(char const* rtspURL, int verbosityLevel, char const* applicationName,
-        int socketNumToServer);
-    # virtual char const* allowedCommandNames(); // we support "OPTIONS" and "REGISTER" only
-    # virtual Boolean weImplementREGISTER(char const* proxyURLSuffix, char*& responseStr); // redefined to return True
-    # virtual void implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer,
-        Boolean deliverViaTCP, char const* proxyURLSuffix);
-    - onRTSPClientCreationFunc* fCreationFunc;
-    - int fVerbosityLevel;
-    - char* fApplicationName;
-}
-RTSPServer <|-- HandlerServerForREGISTERCommand
+ProxyServerMediaSubsession --|> OnDemandServerMediaSubsession
+ProxyServerMediaSubsession --> ProxyRTSPClient
 
 
 @enduml
