@@ -42,6 +42,7 @@ ServerMediaSubsession* MatroskaFileServerDemux ::newServerMediaSubsession(unsign
     ServerMediaSubsession* result;
     resultTrackNumber = 0;
 
+    // 找音视频的trackNumber,然后根据trackNumber生成ServerMediaSubsession,创建成功后result != NULL,此时即可退出循环
     for (result = NULL; result == NULL && fNextTrackTypeToCheck != MATROSKA_TRACK_TYPE_OTHER; fNextTrackTypeToCheck <<= 1) {
         if (fNextTrackTypeToCheck == MATROSKA_TRACK_TYPE_VIDEO)
             resultTrackNumber = fOurMatroskaFile->chosenVideoTrackNumber();
@@ -65,8 +66,10 @@ ServerMediaSubsession* MatroskaFileServerDemux ::newServerMediaSubsessionByTrack
     // Use the track's "codecID" string to figure out which "ServerMediaSubsession" subclass to use:
     ServerMediaSubsession* result = NULL;
     if (strcmp(track->mimeType, "audio/MPEG") == 0) {
+        fprintf(stderr, "MP3AudioMatroskaFileServerMediaSubsession::createNew\n");
         result = MP3AudioMatroskaFileServerMediaSubsession::createNew(*this, track);
     } else {
+        fprintf(stderr, "MatroskaFileServerMediaSubsession::createNew\n");
         result = MatroskaFileServerMediaSubsession::createNew(*this, track);
     }
 
@@ -83,6 +86,7 @@ FramedSource* MatroskaFileServerDemux::newDemuxedTrack(unsigned clientSessionId,
 {
     MatroskaDemux* demuxToUse = NULL;
 
+    fprintf(stderr, "lcp-debug MatroskaFileServerDemux::newDemuxedTrack clientSessionId=%d, trackNumber=%d\n", clientSessionId, trackNumber);
     if (clientSessionId != 0 && clientSessionId == fLastClientSessionId) {
         demuxToUse = fLastCreatedDemux; // use the same demultiplexor as before
             // Note: This code relies upon the fact that the creation of streams for different
@@ -113,6 +117,7 @@ MatroskaFileServerDemux ::MatroskaFileServerDemux(UsageEnvironment& env, char co
     , fLastClientSessionId(0)
     , fLastCreatedDemux(NULL)
 {
+    fprintf(stderr, "lcp-debug MatroskaFileServerDemux ::createNew\n");
     MatroskaFile::createNew(env, fileName, onMatroskaFileCreation, this, preferredLanguage);
 }
 
@@ -123,6 +128,7 @@ MatroskaFileServerDemux::~MatroskaFileServerDemux()
 
 void MatroskaFileServerDemux::onMatroskaFileCreation(MatroskaFile* newFile, void* clientData)
 {
+    fprintf(stderr, "lcp-debug MatroskaFileServerDemux ::onMatroskaFileCreation(MatroskaFile* newFile, void* clientData)\n");
     ((MatroskaFileServerDemux*)clientData)->onMatroskaFileCreation(newFile);
 }
 

@@ -33,41 +33,41 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MP3ADU.hh"
 #endif
 
-class MP3AudioFileServerMediaSubsession: public FileServerMediaSubsession{
+class MP3AudioFileServerMediaSubsession : public FileServerMediaSubsession {
 public:
-  static MP3AudioFileServerMediaSubsession*
-  createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
-	    Boolean generateADUs, Interleaving* interleaving);
-      // Note: "interleaving" is used only if "generateADUs" is True,
-      // (and a value of NULL means 'no interleaving')
+    static MP3AudioFileServerMediaSubsession*
+    createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
+        Boolean generateADUs, Interleaving* interleaving);
+    // Note: "interleaving" is used only if "generateADUs" is True,
+    // (and a value of NULL means 'no interleaving')
 
+    virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
+        unsigned& estBitrate);
+    virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
+        unsigned char rtpPayloadTypeIfDynamic,
+        FramedSource* inputSource);
 protected:
-  MP3AudioFileServerMediaSubsession(UsageEnvironment& env,
-				    char const* fileName, Boolean reuseFirstSource,
-				    Boolean generateADUs,
-				    Interleaving* interleaving);
-      // called only by createNew();
-  virtual ~MP3AudioFileServerMediaSubsession();
+    MP3AudioFileServerMediaSubsession(UsageEnvironment& env,
+        char const* fileName, Boolean reuseFirstSource,
+        Boolean generateADUs,
+        Interleaving* interleaving);
+    // called only by createNew();
+    virtual ~MP3AudioFileServerMediaSubsession();
 
-  FramedSource* createNewStreamSourceCommon(FramedSource* baseMP3Source, unsigned mp3NumBytes, unsigned& estBitrate);
-  void getBaseStreams(FramedSource* frontStream,
-		      FramedSource*& sourceMP3Stream, ADUFromMP3Source*& aduStream/*if any*/);
+    FramedSource* createNewStreamSourceCommon(FramedSource* baseMP3Source, unsigned mp3NumBytes, unsigned& estBitrate);
+    void getBaseStreams(FramedSource* frontStream,
+        FramedSource*& sourceMP3Stream, ADUFromMP3Source*& aduStream /*if any*/);
 
 protected: // redefined virtual functions
-  virtual void seekStreamSource(FramedSource* inputSource, double& seekNPT, double streamDuration, u_int64_t& numBytes);
-  virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
-  virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
-					      unsigned& estBitrate);
-  virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
-                                    unsigned char rtpPayloadTypeIfDynamic,
-				    FramedSource* inputSource);
-  virtual void testScaleFactor(float& scale);
-  virtual float duration() const;
+    virtual void seekStreamSource(FramedSource* inputSource, double& seekNPT, double streamDuration, u_int64_t& numBytes);
+    virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
+    virtual void testScaleFactor(float& scale);
+    virtual float duration() const;
 
 protected:
-  Boolean fGenerateADUs;
-  Interleaving* fInterleaving;
-  float fFileDuration;
+    Boolean fGenerateADUs;
+    Interleaving* fInterleaving;
+    float fFileDuration;
 };
 
 #endif

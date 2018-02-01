@@ -41,9 +41,11 @@ MatroskaFileParser::MatroskaFileParser(MatroskaFile& ourFile, FramedSource* inpu
     , fFrameSizesWithinBlock(NULL)
     , fPresentationTimeOffset(0.0)
 {
+    fprintf(stderr, "lcp-debug MatroskaFileParser ::MatroskaFileParser\n");
     if (ourDemux == NULL) {
         // Initialization
         fCurrentParseState = PARSING_START_OF_FILE;
+        fprintf(stderr, "lcp-debug MatroskaFileParser ::ourDemux == NULLL\n");
         continueParsing();
     } else {
         fCurrentParseState = LOOKING_FOR_CLUSTER;
@@ -100,6 +102,7 @@ void MatroskaFileParser ::continueParsing(void* clientData, unsigned char* /*ptr
 
 void MatroskaFileParser::continueParsing()
 {
+    fprintf(stderr, "lcp-debug MatroskaFileParser ::continueParsing\n");
     if (fInputSource != NULL) {
         if (fInputSource->isCurrentlyAwaitingData())
             return; // Our input source is currently being read. Wait until that read completes
@@ -112,12 +115,15 @@ void MatroskaFileParser::continueParsing()
     }
 
     // We successfully parsed the file.  Call our 'done' function now:
-    if (fOnEndFunc != NULL)
+    if (fOnEndFunc != NULL) {
+        fprintf(stderr, "lcp-debug MatroskaFileParser ::(*fOnEndFunc)(fOnEndClientData)\n");
         (*fOnEndFunc)(fOnEndClientData);
+    }
 }
 
 Boolean MatroskaFileParser::parse()
 {
+    fprintf(stderr, "lcp-debug MatroskaFileParser ::parse\n");
     Boolean areDone = False;
 
     try {

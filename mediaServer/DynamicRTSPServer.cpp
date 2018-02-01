@@ -55,6 +55,7 @@ ServerMediaSession* DynamicRTSPServer ::lookupServerMediaSession(char const* str
     Boolean fileExists = fid != NULL;
 
     // Next, check whether we already have a "ServerMediaSession" for this file:
+    fprintf(stderr, "lcp-debug DynamicRTSPServer ::lookupServerMediaSession\n");
     ServerMediaSession* sms = RTSPServer::lookupServerMediaSession(streamName);
     Boolean smsExists = sms != NULL;
 
@@ -92,6 +93,7 @@ struct MatroskaDemuxCreationState {
 };
 static void onMatroskaDemuxCreation(MatroskaFileServerDemux* newDemux, void* clientData)
 {
+    fprintf(stderr, "lcp-debug DynamicRTSPServer ::onMatroskaDemuxCreation(MatroskaFileServerDemux* newDemux, void* clientData)\n");
     MatroskaDemuxCreationState* creationState = (MatroskaDemuxCreationState*)clientData;
     creationState->demux = newDemux;
     creationState->watchVariable = 1;
@@ -126,6 +128,7 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
     if (extension == NULL)
         return NULL;
 
+    fprintf(stderr, "lcp-debug DynamicRTSPServer ::createNewSMS\n");
     ServerMediaSession* sms = NULL;
     Boolean const reuseSource = False;
     if (strcmp(extension, ".aac") == 0) {
@@ -221,11 +224,13 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
         // (We enter the event loop to wait for this to complete.)
         MatroskaDemuxCreationState creationState;
         creationState.watchVariable = 0;
+        // 创建MatroskaFileServerDemux并parse it
         MatroskaFileServerDemux::createNew(env, fileName, onMatroskaDemuxCreation, &creationState);
         env.taskScheduler().doEventLoop(&creationState.watchVariable);
 
         ServerMediaSubsession* smss;
         while ((smss = creationState.demux->newServerMediaSubsession()) != NULL) {
+            // 创建2个子会话,分别对应音视频
             sms->addSubsession(smss);
         }
     } else if (strcmp(extension, ".ogg") == 0 || strcmp(extension, ".ogv") == 0 || strcmp(extension, ".opus") == 0) {

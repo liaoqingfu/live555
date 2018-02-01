@@ -21,27 +21,36 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MatroskaDemuxedTrack.hh"
 #include "MatroskaFile.hh"
 
-void MatroskaDemuxedTrack::seekToTime(double& seekNPT) {
-  fOurSourceDemux.seekToTime(seekNPT);
+void MatroskaDemuxedTrack::seekToTime(double& seekNPT)
+{
+    fOurSourceDemux.seekToTime(seekNPT);
 }
 
 MatroskaDemuxedTrack::MatroskaDemuxedTrack(UsageEnvironment& env, unsigned trackNumber, MatroskaDemux& sourceDemux)
-  : FramedSource(env),
-    fOurTrackNumber(trackNumber), fOurSourceDemux(sourceDemux), fDurationImbalance(0),
-    fOpusTrackNumber(0) {
-  fPrevPresentationTime.tv_sec = 0; fPrevPresentationTime.tv_usec = 0;
+    : FramedSource(env)
+    , fOurTrackNumber(trackNumber)
+    , fOurSourceDemux(sourceDemux)
+    , fDurationImbalance(0)
+    , fOpusTrackNumber(0)
+{
+    fPrevPresentationTime.tv_sec = 0;
+    fPrevPresentationTime.tv_usec = 0;
 }
 
-MatroskaDemuxedTrack::~MatroskaDemuxedTrack() {
-  fOurSourceDemux.removeTrack(fOurTrackNumber);
+MatroskaDemuxedTrack::~MatroskaDemuxedTrack()
+{
+    fOurSourceDemux.removeTrack(fOurTrackNumber);
 }
 
-void MatroskaDemuxedTrack::doGetNextFrame() {
-  fOurSourceDemux.continueReading();
+void MatroskaDemuxedTrack::doGetNextFrame()
+{
+    fOurSourceDemux.continueReading();
 }
 
-char const* MatroskaDemuxedTrack::MIMEtype() const {
-  MatroskaTrack* track = fOurSourceDemux.fOurFile.lookup(fOurTrackNumber);
-  if (track == NULL) return "(unknown)"; // shouldn't happen
-  return track->mimeType;
+char const* MatroskaDemuxedTrack::MIMEtype() const
+{
+    MatroskaTrack* track = fOurSourceDemux.fOurFile.lookup(fOurTrackNumber);
+    if (track == NULL)
+        return "(unknown)"; // shouldn't happen
+    return track->mimeType;
 }

@@ -123,6 +123,7 @@ MatroskaFile::MatroskaFile(UsageEnvironment& env, char const* fileName, onCreati
     fTrackTable = new MatroskaTrackTable;
     fDemuxesTable = HashTable::create(ONE_WORD_HASH_KEYS);
 
+    fprintf(stderr, "lcp-debug MatroskaFile ::createNew\n");
     FramedSource* inputSource = ByteStreamFileSource::createNew(envir(), fileName);
     if (inputSource == NULL) {
         // The specified input file does not exist!
@@ -130,6 +131,7 @@ MatroskaFile::MatroskaFile(UsageEnvironment& env, char const* fileName, onCreati
         handleEndOfTrackHeaderParsing(); // we have no file, and thus no tracks, but we still need to signal this
     } else {
         // Initialize ourselves by parsing the file's 'Track' headers:
+        fprintf(stderr, "lcp-debug MatroskaFile ::createNew  inputSource != NULL\n");
         fParserForInitialization = new MatroskaFileParser(*this, inputSource, handleEndOfTrackHeaderParsing, this, NULL);
     }
 }
@@ -153,6 +155,7 @@ MatroskaFile::~MatroskaFile()
 
 void MatroskaFile::handleEndOfTrackHeaderParsing(void* clientData)
 {
+    fprintf(stderr, "lcp-debug MatroskaFile ::handleEndOfTrackHeaderParsing(void* clientData)\n");
     ((MatroskaFile*)clientData)->handleEndOfTrackHeaderParsing();
 }
 
@@ -173,6 +176,7 @@ void MatroskaFile::handleEndOfTrackHeaderParsing()
     //     - If none is 'forced', choose the one that's 'default'.
     //     - If more than one is 'default', choose the first one that matches our preferred language, or the first if none matches.
     //     - If none is 'default', choose the first one that matches our preferred language, or the first if none matches.
+    fprintf(stderr, "lcp-debug MatroskaFile ::handleEndOfTrackHeaderParsing()\n");
     unsigned numTracks = fTrackTable->numTracks();
     if (numTracks > 0) {
         TrackChoiceRecord* trackChoice = new TrackChoiceRecord[numTracks];
@@ -245,8 +249,10 @@ void MatroskaFile::handleEndOfTrackHeaderParsing()
     fParserForInitialization = NULL;
 
     // Finally, signal our caller that we've been created and initialized:
-    if (fOnCreation != NULL)
+    if (fOnCreation != NULL) {
+        fprintf(stderr, "lcp-debug MatroskaFile ::(*fOnCreation)(this, fOnCreationClientData);\n");
         (*fOnCreation)(this, fOnCreationClientData);
+    }
 }
 
 MatroskaTrack* MatroskaFile::lookup(unsigned trackNumber) const

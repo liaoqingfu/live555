@@ -23,43 +23,49 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MatroskaDemuxedTrack.hh"
 #include "FramedFilter.hh"
 
-MatroskaFileServerMediaSubsession* MatroskaFileServerMediaSubsession
-::createNew(MatroskaFileServerDemux& demux, MatroskaTrack* track) {
-  return new MatroskaFileServerMediaSubsession(demux, track);
+MatroskaFileServerMediaSubsession* MatroskaFileServerMediaSubsession ::createNew(MatroskaFileServerDemux& demux, MatroskaTrack* track)
+{
+    return new MatroskaFileServerMediaSubsession(demux, track);
 }
 
-MatroskaFileServerMediaSubsession
-::MatroskaFileServerMediaSubsession(MatroskaFileServerDemux& demux, MatroskaTrack* track)
-  : FileServerMediaSubsession(demux.envir(), demux.fileName(), False),
-    fOurDemux(demux), fTrack(track), fNumFiltersInFrontOfTrack(0) {
+MatroskaFileServerMediaSubsession ::MatroskaFileServerMediaSubsession(MatroskaFileServerDemux& demux, MatroskaTrack* track)
+    : FileServerMediaSubsession(demux.envir(), demux.fileName(), False)
+    , fOurDemux(demux)
+    , fTrack(track)
+    , fNumFiltersInFrontOfTrack(0)
+{
 }
 
-MatroskaFileServerMediaSubsession::~MatroskaFileServerMediaSubsession() {
+MatroskaFileServerMediaSubsession::~MatroskaFileServerMediaSubsession()
+{
 }
 
 float MatroskaFileServerMediaSubsession::duration() const { return fOurDemux.fileDuration(); }
 
-void MatroskaFileServerMediaSubsession
-::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
-  for (unsigned i = 0; i < fNumFiltersInFrontOfTrack; ++i) {
-    // "inputSource" is a filter.  Go back to *its* source:
-    inputSource = ((FramedFilter*)inputSource)->inputSource();
-  }
-  ((MatroskaDemuxedTrack*)inputSource)->seekToTime(seekNPT);
+void MatroskaFileServerMediaSubsession ::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/)
+{
+    for (unsigned i = 0; i < fNumFiltersInFrontOfTrack; ++i) {
+        // "inputSource" is a filter.  Go back to *its* source:
+        inputSource = ((FramedFilter*)inputSource)->inputSource();
+    }
+    ((MatroskaDemuxedTrack*)inputSource)->seekToTime(seekNPT);
 }
 
-FramedSource* MatroskaFileServerMediaSubsession
-::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {
-  FramedSource* baseSource = fOurDemux.newDemuxedTrack(clientSessionId, fTrack->trackNumber);
-  if (baseSource == NULL) return NULL;
-  
-  return fOurDemux.ourMatroskaFile()
-    ->createSourceForStreaming(baseSource, fTrack->trackNumber,
-			       estBitrate, fNumFiltersInFrontOfTrack);
+FramedSource* MatroskaFileServerMediaSubsession ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate)
+{
+    fprintf(stderr, "lcp-debug MatroskaFileServerMediaSubsession ::createNewStreamSource clientSessionId=%d, estBitrate=%d\n", clientSessionId, estBitrate);
+    FramedSource* baseSource = fOurDemux.newDemuxedTrack(clientSessionId, fTrack->trackNumber);
+    if (baseSource == NULL)
+        return NULL;
+
+    return fOurDemux.ourMatroskaFile()
+        ->createSourceForStreaming(baseSource, fTrack->trackNumber,
+            estBitrate, fNumFiltersInFrontOfTrack);
 }
 
-RTPSink* MatroskaFileServerMediaSubsession
-::createNewRTPSink(Groupsock* rtpGroupsock, unsigned char rtpPayloadTypeIfDynamic, FramedSource* /*inputSource*/) {
-  return fOurDemux.ourMatroskaFile()
-    ->createRTPSinkForTrackNumber(fTrack->trackNumber, rtpGroupsock, rtpPayloadTypeIfDynamic);
+RTPSink* MatroskaFileServerMediaSubsession ::createNewRTPSink(Groupsock* rtpGroupsock, unsigned char rtpPayloadTypeIfDynamic, FramedSource* /*inputSource*/)
+{
+    fprintf(stderr, "lcp-debug MatroskaFileServerMediaSubsession ::createNewRTPSink rtpPayloadTypeIfDynamic=%d\n", rtpPayloadTypeIfDynamic);
+    return fOurDemux.ourMatroskaFile()
+        ->createRTPSinkForTrackNumber(fTrack->trackNumber, rtpGroupsock, rtpPayloadTypeIfDynamic);
 }

@@ -81,6 +81,7 @@ public:
         , fResponseHandler(responseHandler)
     {
         // Add ourself to our server's 'pending REGISTER requests' table:
+        fprintf(stderr, "lcp-debug RegisterRequestRecord new =======================>\n");
         ourServer.fPendingRegisterRequests->Add((char const*)this, this);
     }
 

@@ -12,7 +12,7 @@
 #include "RTSPCommon.hh"
 #include "liveMedia.hh"
 
-#if 0
+#if 1
 char* server = "192.168.22.124"; //RTSP流媒体转发服务器地址，<请修改为自己搭建的流媒体服务器地址>
 int port = 11554; //RTSP流媒体转发服务器端口，<请修改为自己搭建的流媒体服务器端口>
 char* streamName = "av_stream.sdp"; //流名称，推送到Darwin的流名称必须以.sdp结尾
@@ -175,7 +175,7 @@ void afterPlaying(void* clientData)
 
     if (injector != NULL) {
         Medium::close(*env, injector->name());
-        injector == NULL;
+        injector = NULL;
     }
 
     ServerMediaSubsession* subsession = NULL;

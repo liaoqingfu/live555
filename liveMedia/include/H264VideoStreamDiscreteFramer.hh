@@ -28,19 +28,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "H264or5VideoStreamDiscreteFramer.hh"
 #endif
 
-class H264VideoStreamDiscreteFramer: public H264or5VideoStreamDiscreteFramer {
+class H264VideoStreamDiscreteFramer : public H264or5VideoStreamDiscreteFramer {
 public:
-  static H264VideoStreamDiscreteFramer*
-  createNew(UsageEnvironment& env, FramedSource* inputSource);
+    static H264VideoStreamDiscreteFramer*
+    createNew(UsageEnvironment& env, FramedSource* inputSource);
 
 protected:
-  H264VideoStreamDiscreteFramer(UsageEnvironment& env, FramedSource* inputSource);
-      // called only by createNew()
-  virtual ~H264VideoStreamDiscreteFramer();
+    H264VideoStreamDiscreteFramer(UsageEnvironment& env, FramedSource* inputSource);
+    // called only by createNew()
+    virtual ~H264VideoStreamDiscreteFramer();
 
 private:
-  // redefined virtual functions:
-  virtual Boolean isH264VideoStreamFramer() const;
+    // redefined virtual functions:
+    virtual Boolean isH264VideoStreamFramer() const;
 };
 
 #endif
