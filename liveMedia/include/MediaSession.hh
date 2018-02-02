@@ -85,9 +85,7 @@ public:
     char*& _absStartTime() { return fAbsStartTime; }
     char*& _absEndTime() { return fAbsEndTime; }
 
-    Boolean initiateByMediaType(char const* mimeType,
-        MediaSubsession*& resultSubsession,
-        int useSpecialRTPoffset = -1);
+    Boolean initiateByMediaType(char const* mimeType, MediaSubsession*& resultSubsession, int useSpecialRTPoffset = -1);
     // Initiates the first subsession with the specified MIME type
     // Returns the resulting subsession, or 'multi source' (not both)
 
@@ -111,11 +109,8 @@ protected:
     Boolean parseSDPAttribute_range(char const* sdpLine);
     Boolean parseSDPAttribute_source_filter(char const* sdpLine);
 
-    static char* lookupPayloadFormat(unsigned char rtpPayloadType,
-        unsigned& rtpTimestampFrequency,
-        unsigned& numChannels);
-    static unsigned guessRTPTimestampFrequency(char const* mediumName,
-        char const* codecName);
+    static char* lookupPayloadFormat(unsigned char rtpPayloadType, unsigned& rtpTimestampFrequency, unsigned& numChannels);
+    static unsigned guessRTPTimestampFrequency(char const* mediumName, char const* codecName);
 
 protected:
     friend class MediaSubsessionIterator;

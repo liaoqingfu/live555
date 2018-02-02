@@ -163,23 +163,13 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription)
         char* mediumName = strDupSize(sdpLine); // ensures we have enough space
         char const* protocolName = NULL;
         unsigned payloadFormat;
-        if ((sscanf(sdpLine, "m=%s %hu RTP/AVP %u",
-                 mediumName, &subsession->fClientPortNum, &payloadFormat)
-                    == 3
-                || sscanf(sdpLine, "m=%s %hu/%*u RTP/AVP %u",
-                       mediumName, &subsession->fClientPortNum, &payloadFormat)
-                    == 3)
-            && payloadFormat <= 127) {
+        if ((sscanf(sdpLine, "m=%s %hu RTP/AVP %u", mediumName, &subsession->fClientPortNum, &payloadFormat) == 3 || 
+            sscanf(sdpLine, "m=%s %hu/%*u RTP/AVP %u", mediumName, &subsession->fClientPortNum, &payloadFormat) == 3) && 
+            payloadFormat <= 127) {
             protocolName = "RTP";
-        } else if ((sscanf(sdpLine, "m=%s %hu UDP %u",
-                        mediumName, &subsession->fClientPortNum, &payloadFormat)
-                           == 3
-                       || sscanf(sdpLine, "m=%s %hu udp %u",
-                              mediumName, &subsession->fClientPortNum, &payloadFormat)
-                           == 3
-                       || sscanf(sdpLine, "m=%s %hu RAW/RAW/UDP %u",
-                              mediumName, &subsession->fClientPortNum, &payloadFormat)
-                           == 3)
+        } else if ((sscanf(sdpLine, "m=%s %hu UDP %u", mediumName, &subsession->fClientPortNum, &payloadFormat) == 3 || 
+            sscanf(sdpLine, "m=%s %hu udp %u", mediumName, &subsession->fClientPortNum, &payloadFormat) == 3 || 
+            sscanf(sdpLine, "m=%s %hu RAW/RAW/UDP %u", mediumName, &subsession->fClientPortNum, &payloadFormat) == 3)
             && payloadFormat <= 127) {
             // This is a RAW UDP source
             protocolName = "UDP";
@@ -272,15 +262,11 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription)
         // If we don't yet know the codec name, try looking it up from the
         // list of static payload types:
         if (subsession->fCodecName == NULL) {
-            subsession->fCodecName
-                = lookupPayloadFormat(subsession->fRTPPayloadFormat,
-                    subsession->fRTPTimestampFrequency,
-                    subsession->fNumChannels);
+            subsession->fCodecName = lookupPayloadFormat(subsession->fRTPPayloadFormat, subsession->fRTPTimestampFrequency, subsession->fNumChannels);
             if (subsession->fCodecName == NULL) {
                 char typeStr[20];
                 sprintf(typeStr, "%d", subsession->fRTPPayloadFormat);
-                envir().setResultMsg("Unknown codec name for RTP payload type ",
-                    typeStr);
+                envir().setResultMsg("Unknown codec name for RTP payload type ", typeStr);
                 return False;
             }
         }
@@ -290,9 +276,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription)
         // SDP "rtpmap" attribute erroneously didn't specify it),
         // then guess it now:
         if (subsession->fRTPTimestampFrequency == 0) {
-            subsession->fRTPTimestampFrequency
-                = guessRTPTimestampFrequency(subsession->fMediumName,
-                    subsession->fCodecName);
+            subsession->fRTPTimestampFrequency = guessRTPTimestampFrequency(subsession->fMediumName, subsession->fCodecName);
         }
     }
 
@@ -1340,7 +1324,9 @@ Boolean MediaSubsession::parseSDPAttribute_rtpmap(char const* sdpLine)
 
 Boolean MediaSubsession::parseSDPAttribute_rtcpmux(char const* sdpLine)
 {
+    fprintf(stderr, "lcp-debug MediaSubsession::parseSDPAttribute_rtcpmux, sdpLine=[%s]\n", sdpLine);
     if (strncmp(sdpLine, "a=rtcp-mux", 10) == 0) {
+        fprintf(stderr, "lcp-debug MediaSubsession::parseSDPAttribute_rtcpmux, fMultiplexRTCPWithRTP = True;\n", sdpLine);
         fMultiplexRTCPWithRTP = True;
         return True;
     }

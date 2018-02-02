@@ -228,7 +228,7 @@ Boolean DarwinInjector ::setDestination(char const* remoteRTSPServerNameOrAddres
 
         // Next, tell the remote server to start receiving the stream from us.
         // (To do this, we first create a "MediaSession" object from the SDP description.)
-        fSession = MediaSession::createNew(envir(), sdp);
+        fSession = MediaSession::createNew(envir(), sdp); // 根据sdp解析生成1个或多个MediaSubSessioin
         if (fSession == NULL)
             break;
 

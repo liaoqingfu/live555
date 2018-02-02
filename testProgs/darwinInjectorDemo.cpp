@@ -139,7 +139,7 @@ bool RedirectStream(char const* ip, unsigned port)
             unsigned char rtpPayloadType = proxySubsession->rtpPayloadFormat();
             *env << "audio: rtpPayloadType = " << rtpPayloadType << "\n";
             // 建立Audio的RTPSink
-            aSink = proxySubsession->createNewRTPSink(rtpGroupsockVideo, rtpPayloadType, source);
+            aSink = proxySubsession->createNewRTPSink(rtpGroupsockAudio, rtpPayloadType, source);
             // 将Audio的RTPSink赋值给DarwinInjector，推送音频RTP给Darwin
             injector->addStream(aSink, NULL);
         }
@@ -191,7 +191,6 @@ void afterPlaying(void* clientData)
         ProxyServerMediaSubsession* proxySubsession = (ProxyServerMediaSubsession*)subsession;
         if (strcmp(proxySubsession->mediumName(), "video") == 0)
             proxySubsession->closeStreamSource(vSource);
-
         else
             proxySubsession->closeStreamSource(aSource);
     }

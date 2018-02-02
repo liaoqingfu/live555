@@ -63,8 +63,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
     , fNumChannels(numChannels)
     , fEstimatedBitrate(0)
 {
-    fRTPPayloadFormatName
-        = strDup(rtpPayloadFormatName == NULL ? "???" : rtpPayloadFormatName);
+    fRTPPayloadFormatName = strDup(rtpPayloadFormatName == NULL ? "???" : rtpPayloadFormatName);
     gettimeofday(&fCreationTime, NULL);
     fTotalOctetCountStartTime = fCreationTime;
     resetPresentationTimes();

@@ -151,6 +151,7 @@ RTPInterface::~RTPInterface()
 void RTPInterface::setStreamSocket(int sockNum,
     unsigned char streamChannelId)
 {
+    fprintf(stderr, "lcp-debug RTPInterface::setStreamSocket sockNum=%d, streamChannelId=%d\n", sockNum, streamChannelId);
     fGS->removeAllDestinations();
     envir().taskScheduler().disableBackgroundHandling(fGS->socketNum()); // turn off any reading on our datagram socket
     fGS->reset(); // and close our datagram socket, because we won't be using it anymore
@@ -164,10 +165,10 @@ void RTPInterface::addStreamSocket(int sockNum,
     if (sockNum < 0)
         return;
 
+    fprintf(stderr, "lcp-debug RTPInterface::addStreamSocket sockNum=%d, streamChannelId=%d\n", sockNum, streamChannelId);
     for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
          streams = streams->fNext) {
-        if (streams->fStreamSocketNum == sockNum
-            && streams->fStreamChannelId == streamChannelId) {
+        if (streams->fStreamSocketNum == sockNum && streams->fStreamChannelId == streamChannelId) {
             return; // we already have it
         }
     }
