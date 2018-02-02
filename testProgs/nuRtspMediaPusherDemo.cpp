@@ -89,11 +89,11 @@ bool RedirectStream(char const* ip, unsigned port, const char *fileName)
 
     struct in_addr dummyDestAddress;
     dummyDestAddress.s_addr = 0;
-    rtpGroupsockVideo = new Groupsock(*env, dummyDestAddress, 0, 0);
+    rtpGroupsockVideo = new Groupsock(*env, dummyDestAddress, 6700, 255);
 
     struct in_addr dummyDestAddressAudio;
     dummyDestAddressAudio.s_addr = 0;
-    rtpGroupsockAudio = new Groupsock(*env, dummyDestAddressAudio, 0, 0);
+    rtpGroupsockAudio = new Groupsock(*env, dummyDestAddressAudio, 6702, 255);
 
     *env << "beforeCreateMediaSource, fileName = " << fileName << "\n";
     MatroskaDemuxCreationState creationState;
@@ -143,17 +143,15 @@ bool RedirectStream(char const* ip, unsigned port, const char *fileName)
     }
 
     // 将Video的RTPSink赋值给DarwinInjector，推送视频RTP给Darwin
-    injector->addStream(aSink, NULL);
     injector->addStream(vSink, NULL);
+    injector->addStream(aSink, NULL);
 
-    *env << "3333333333333\n";
     // RTSP ANNOUNCE/SETUP/PLAY推送过程
     if (!injector->setDestination(ip, streamName, "live555", "LIVE555", port)) {
         *env << "injector->setDestination() failed: " << env->getResultMsg() << "\n";
         return false;
     }
 
-    *env << "4444444444444\n";
     // 开始转发视频RTP数据
     if ((vSink != NULL) && (vSource != NULL)) {
         *env << "vSink->startPlaying\n";
@@ -162,7 +160,7 @@ bool RedirectStream(char const* ip, unsigned port, const char *fileName)
 
     // 开始转发音频RTP数据
     if ((aSink != NULL) && (aSource != NULL)) {
-        *env << "vSink->startPlaying\n";
+        *env << "aSink->startPlaying\n";
         aSink->startPlaying(*aSource, afterPlaying, aSink);
     }
 

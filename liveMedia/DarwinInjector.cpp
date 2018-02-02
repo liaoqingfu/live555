@@ -237,6 +237,7 @@ Boolean DarwinInjector ::setDestination(char const* remoteRTSPServerNameOrAddres
         MediaSubsession* subsession;
         ss = fHeadSubstream;
         unsigned streamChannelId = 0;
+        fprintf(stderr, "lcp-debug subsession = iter.next()) != NULL\n");
         while ((subsession = iter.next()) != NULL) {
             if (!subsession->initiate())
                 break;
@@ -254,10 +255,13 @@ Boolean DarwinInjector ::setDestination(char const* remoteRTSPServerNameOrAddres
 
             // Tell this subsession's RTPSink and RTCPInstance to use
             // the RTSP TCP connection:
+            fprintf(stderr, "ss->rtpSink()->setStreamSocket, streamChannelId=%d\n", streamChannelId);
             ss->rtpSink()->setStreamSocket(fRTSPClient->socketNum(), streamChannelId++);
             if (ss->rtcpInstance() != NULL) {
                 ss->rtcpInstance()->setStreamSocket(fRTSPClient->socketNum(),
                     streamChannelId++);
+            } else {
+                streamChannelId++;
             }
             ss = ss->next();
         }

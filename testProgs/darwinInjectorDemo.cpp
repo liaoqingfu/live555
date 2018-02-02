@@ -63,7 +63,12 @@ int main(int argc, char** argv)
     env = BasicUsageEnvironment::createNew(*scheduler);
 
     // 新建转发SESSION
-    sms = ProxyServerMediaSession::createNew(*env, NULL, src);
+    if (argc != 2) {
+        *env << "pls input your source sdp" << "\n";
+        return -1;
+    }
+    char *newsrc = argv[1];
+    sms = ProxyServerMediaSession::createNew(*env, NULL, newsrc);
 
     // 循环等待转接程序与源端连接成功
     while (sms->numSubsessions() <= 0) {
@@ -118,6 +123,7 @@ bool RedirectStream(char const* ip, unsigned port)
         FramedSource* source = proxySubsession->createNewStreamSource(1, streamBitrate);
 
         if (strcmp(proxySubsession->mediumName(), "video") == 0) {
+            *env << " proxySubsession->mediumName() video\n";
             // 用ProxyServerMediaSubsession建立Video的RTPSource
             vSource = source;
             unsigned char rtpPayloadType = proxySubsession->rtpPayloadFormat();
@@ -127,6 +133,7 @@ bool RedirectStream(char const* ip, unsigned port)
             // 将Video的RTPSink赋值给DarwinInjector，推送视频RTP给Darwin
             injector->addStream(vSink, NULL);
         } else {
+            *env << " proxySubsession->mediumName() audio\n";
             // 用ProxyServerMediaSubsession建立Audio的RTPSource
             aSource = source;
             unsigned char rtpPayloadType = proxySubsession->rtpPayloadFormat();
@@ -152,7 +159,7 @@ bool RedirectStream(char const* ip, unsigned port)
 
     // 开始转发音频RTP数据
     if ((aSink != NULL) && (aSource != NULL)) {
-        *env << "vSink->startPlaying\n";
+        *env << "aSink->startPlaying\n";
         aSink->startPlaying(*aSource, afterPlaying, aSink);
     }
 
