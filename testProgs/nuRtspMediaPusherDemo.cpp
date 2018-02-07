@@ -15,6 +15,8 @@
 #include "../liveMedia/MatroskaFileServerMediaSubsession.hh"
 #include "../liveMedia/include/MP3AudioFileServerMediaSubsession.hh"
 #include "../liveMedia/MP3AudioMatroskaFileServerMediaSubsession.hh"
+#include "../liveMedia/include/NuVideoServerMediaSubsession.hh"
+#include "../liveMedia/include/NuH264VideoStreamFramer.hh"
 
 char* server = "192.168.22.124"; //RTSP流媒体转发服务器地址，<请修改为自己搭建的流媒体服务器地址>
 int port = 11554; //RTSP流媒体转发服务器端口，<请修改为自己搭建的流媒体服务器端口>
@@ -94,6 +96,13 @@ bool RedirectStream(char const* ip, unsigned port, const char *fileName)
     struct in_addr dummyDestAddressAudio;
     dummyDestAddressAudio.s_addr = 0;
     rtpGroupsockAudio = new Groupsock(*env, dummyDestAddressAudio, 6702, 255);
+
+    *env << "lcp-debug test----------------" << "\n";
+    unsigned char testRtpPayloadType = 96;
+    unsigned testEstBitrate = 0;
+    NuVideoServerMediaSubsession* nuVSubsession = NuVideoServerMediaSubsession::createNew(*env, false);
+    RTPSink* nuRtpSink = nuVSubsession->createNewRTPSink(rtpGroupsockVideo, testRtpPayloadType, NULL);
+    FramedSource* nuSource = nuVSubsession->createNewStreamSource(0, testEstBitrate);
 
     *env << "beforeCreateMediaSource, fileName = " << fileName << "\n";
     MatroskaDemuxCreationState creationState;
