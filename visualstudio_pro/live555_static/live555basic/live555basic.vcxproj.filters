@@ -579,6 +579,9 @@
     <ClCompile Include="..\..\..\liveMedia\WAVAudioFileSource.cpp">
       <Filter>源文件\liveMedia</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\liveMedia\EBMLNumber.hh">
@@ -628,6 +631,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\liveMedia\StreamParser.hh">
       <Filter>源文件\liveMedia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nutypes.h">
+      <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

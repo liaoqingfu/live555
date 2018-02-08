@@ -31,6 +31,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -38,12 +39,14 @@
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -51,6 +54,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -332,6 +336,7 @@
     <ClCompile Include="..\..\..\liveMedia\VP9VideoRTPSource.cpp" />
     <ClCompile Include="..\..\..\liveMedia\WAVAudioFileServerMediaSubsession.cpp" />
     <ClCompile Include="..\..\..\liveMedia\WAVAudioFileSource.cpp" />
+    <ClCompile Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.cpp" />
     <ClCompile Include="..\..\..\UsageEnvironment\HashTable.cpp" />
     <ClCompile Include="..\..\..\UsageEnvironment\strDup.cpp" />
     <ClCompile Include="..\..\..\UsageEnvironment\UsageEnvironment.cpp" />
@@ -353,6 +358,8 @@
     <ClInclude Include="..\..\..\liveMedia\OggFileServerMediaSubsession.hh" />
     <ClInclude Include="..\..\..\liveMedia\rtcp_from_spec.h" />
     <ClInclude Include="..\..\..\liveMedia\StreamParser.hh" />
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.h" />
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nutypes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
