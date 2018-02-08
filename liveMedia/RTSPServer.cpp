@@ -203,8 +203,7 @@ Boolean RTSPServer::setUpTunnelingOverHTTP(Port httpPort)
     fHTTPServerSocket = setUpOurSocket(envir(), httpPort);
     if (fHTTPServerSocket >= 0) {
         fHTTPServerPort = httpPort;
-        envir().taskScheduler().turnOnBackgroundReadHandling(fHTTPServerSocket,
-            (TaskScheduler::BackgroundHandlerProc*)&incomingConnectionHandlerHTTP, this);
+        envir().taskScheduler().turnOnBackgroundReadHandling(fHTTPServerSocket, (TaskScheduler::BackgroundHandlerProc*)&RTSPServer::incomingConnectionHandlerHTTP, this);
         return True;
     }
 
@@ -808,7 +807,7 @@ void RTSPServer::RTSPClientConnection::handleAlternativeRequestByte1(u_int8_t re
     } else if (requestByte == 0xFE) {
         // Another hack: The new handler of the input TCP socket no longer needs it, so take back control of it:
         envir().taskScheduler().setBackgroundHandling(fClientInputSocket, SOCKET_READABLE | SOCKET_EXCEPTION,
-            (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
+            (TaskScheduler::BackgroundHandlerProc*)&GenericMediaServer::ClientConnection::incomingRequestHandler, this);
     } else {
         // Normal case: Add this character to our buffer; then try to handle the data that we have buffered so far:
         if (fRequestBufferBytesLeft == 0 || fRequestBytesAlreadySeen >= REQUEST_BUFFER_SIZE)
@@ -1382,7 +1381,7 @@ void RTSPServer::RTSPClientConnection ::changeClientInputSocket(int newSocketNum
     envir().taskScheduler().disableBackgroundHandling(fClientInputSocket);
     fClientInputSocket = newSocketNum;
     envir().taskScheduler().setBackgroundHandling(fClientInputSocket, SOCKET_READABLE | SOCKET_EXCEPTION,
-        (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
+        (TaskScheduler::BackgroundHandlerProc*)&GenericMediaServer::ClientConnection::incomingRequestHandler, this);
 
     // Also write any extra data to our buffer, and handle it:
     if (extraDataSize > 0 && extraDataSize <= fRequestBufferBytesLeft /*sanity check; should always be true*/) {

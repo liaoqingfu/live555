@@ -2,3 +2,7 @@
 *.a
 Makefile
 *.exe
+visualstudio_pro/*/Debug
+visualstudio_pro/*/*/Debug
+*.ipch
+visualstudio_pro/*/.vs
