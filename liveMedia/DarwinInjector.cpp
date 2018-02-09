@@ -306,8 +306,10 @@ void DarwinInjector::genericResponseHandler1(int responseCode, char* responseStr
     // Set result values:
     fResultCode = responseCode;
     fResultString = responseString;
-
+    envir() << "lcp-debug DarwinInjector::genericResponseHandler1 fResultCode = " << responseCode << ", responseString = " << responseString << "\n";
     // Signal a break from the event loop (thereby returning from the blocking command):
+    if (fConnStateCallBack)
+        fConnStateCallBack(responseCode, responseString);
     fWatchVariable = ~0;
 }
 

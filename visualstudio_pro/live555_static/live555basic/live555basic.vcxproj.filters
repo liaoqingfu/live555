@@ -25,6 +25,9 @@
     <Filter Include="源文件\UsageEnvironment">
       <UniqueIdentifier>{68ec375f-45c4-44e2-85f5-a19d9073fc79}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\utils">
+      <UniqueIdentifier>{192da476-6b53-4ef3-a9e4-91adb21de4dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\BasicUsageEnvironment\BasicHashTable.cpp">
@@ -582,6 +585,9 @@
     <ClCompile Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\NuPusher_RTSP\NuPusherHandler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\liveMedia\EBMLNumber.hh">
@@ -632,11 +638,17 @@
     <ClInclude Include="..\..\..\liveMedia\StreamParser.hh">
       <Filter>源文件\liveMedia</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\NuPusher_RTSP\nutypes.h">
       <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\utils\Log.h">
+      <Filter>头文件\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\NuPusherHandler.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

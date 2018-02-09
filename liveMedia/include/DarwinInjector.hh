@@ -54,6 +54,8 @@ To use a "DarwinInjector":
 
 class SubstreamDescriptor; // forward
 
+typedef void connectStateCallBack(int &state, char* resultStr);
+
 class DarwinInjector : public Medium {
 public:
     static DarwinInjector* createNew(UsageEnvironment& env,
@@ -64,6 +66,7 @@ public:
         DarwinInjector*& result);
 
     void addStream(RTPSink* rtpSink, RTCPInstance* rtcpInstance);
+    void registerConnectStateCallBack(connectStateCallBack* cb) { fConnStateCallBack = cb; }
 
     Boolean setDestination(char const* remoteRTSPServerNameOrAddress,
         char const* remoteFileName,
@@ -86,6 +89,7 @@ private:
 
     virtual ~DarwinInjector();
 
+    connectStateCallBack *fConnStateCallBack;
     static void genericResponseHandler(RTSPClient* rtspClient, int responseCode, char* responseString);
     void genericResponseHandler1(int responseCode, char* responseString);
 

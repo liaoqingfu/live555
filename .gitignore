@@ -6,3 +6,6 @@ visualstudio_pro/*/Debug
 visualstudio_pro/*/*/Debug
 *.ipch
 visualstudio_pro/*/.vs
+*.obj
+visualstudio_pro/live555_share/live555_share/x64
+visualstudio_pro/live555_share/live555_share/x64
