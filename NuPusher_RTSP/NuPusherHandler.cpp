@@ -12,15 +12,6 @@
 #define LOG_TAG     "NUPUSHER_HANDLER"
 #include "utils/Log.h"
 
-// 停止推送，释放所有变量
-void afterPlaying(void* clientData)
-{
-    if (clientData == NULL)
-        return;
-
-    //releaseOurselves();
-}
-
 NuPusherHandler::NuPusherHandler()
 {
     ALOGDTRACE();
@@ -63,6 +54,17 @@ NuPusherHandler::releaseOurselves()
     delete fAudioRtpGroupsock;
     fVideoRtpGroupsock = NULL;
     fAudioRtpGroupsock = NULL;
+}
+
+
+// 停止推送，释放所有变量
+static void afterPlaying(void* clientData)
+{
+	if (clientData == NULL)
+		return;
+
+	NuPusherHandler *handler = (NuPusherHandler *)clientData;
+	handler->releaseOurselves();
 }
 
 // 注册回调
@@ -147,7 +149,7 @@ NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, in
 
     ALOGDTRACE();
     fInjector = DarwinInjector::createNew(*fEnv);
-    //fInjector->registerConnectStateCallBack((connectStateCallBack *)&NuPusherHandler::connStateCallBack);
+	fInjector->registerConnectStateCallBack(this);
     struct in_addr dummyDestAddress;
     dummyDestAddress.s_addr = 0;
     fVideoRtpGroupsock = new Groupsock(*fEnv, dummyDestAddress, 0, 0);
@@ -221,13 +223,13 @@ NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, in
     // 开始转发视频RTP数据
     if ((fVideoSink != NULL) && (vSource != NULL)) {
         ALOGD("fVideoSink->startPlaying\n");
-        fVideoSink->startPlaying(*vSource, afterPlaying, fVideoSink);
+        fVideoSink->startPlaying(*vSource, afterPlaying, this);
     }
 
     // 开始转发音频RTP数据
     if ((fAudioSink != NULL) && (aSource != NULL)) {
         ALOGD("fAudioSink->startPlaying\n");
-        fAudioSink->startPlaying(*aSource, afterPlaying, fAudioSink);
+        fAudioSink->startPlaying(*aSource, afterPlaying, this);
     }
 
     ALOGD("Beginning to get camera video...\n");

@@ -4,6 +4,10 @@
 #include "nupusher_rtsp_api.h"
 #include "nutypes.h"
 
+#ifndef _DARWIN_INJECTOR_HH
+#include "DarwinInjector.hh"
+#endif
+
 // forward
 class UsageEnvironment;
 class TaskScheduler;
@@ -12,12 +16,12 @@ class FramedSource;
 class RTPSink;
 class Groupsock;
 
-class NuPusherHandler
-{
+class NuPusherHandler : public IDarwinInjectorCallBack {
 public:
     NuPusherHandler();
     ~NuPusherHandler();
-    NU_U32 startStream(char* serverAddr,
+	void    releaseOurselves();
+	NU_U32 startStream(char* serverAddr,
         NU_U16 port,
         char* streamName,
         int rtpOverTcp, /*1-tcp, 2-udp*/
@@ -32,14 +36,10 @@ public:
     void*   getUserPointer();
     void    setId(int id);
     int     getId();
+	virtual void connStateCallBack(int state, char* resultStr);
 
 private:
-    void    releaseOurselves();
-    //void    afterPlaying(void* clientData);
     NuPusherRTSP_Callback fUserCallBack;
-    //void    afterPlaying(void* clientData);
-    void    connStateCallBack(int state, char* resultStr);
-
     NU_Bool fIsPlaying;
 
     void*   fUserPtr;
