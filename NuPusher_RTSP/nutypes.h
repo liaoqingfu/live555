@@ -15,6 +15,8 @@
 #define NU_Pusher_Handle void*
 #define NU_HLS_Handle void*
 
+#define	MAX_AVQUEUE_SIZE	    (1024*1024)	//队列大小
+
 typedef int						NU_I32;
 
 typedef unsigned char           NU_U8;

@@ -16,7 +16,11 @@ NuPusherHandler::NuPusherHandler()
 {
     ALOGDTRACE();
     fScheduler = BasicTaskScheduler::createNew();
-    fEnv = BasicUsageEnvironment::createNew(*fScheduler);
+    fEnv = BasicUsageEnvironment::createNew(*fScheduler); 
+    fAvQueue = NULL;
+    //fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
+    //SSQ_Init(fAvQueue, 0x00, 0, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
+    //SSQ_Clear(fAvQueue);
 }
 
 NuPusherHandler::~NuPusherHandler()
@@ -60,11 +64,11 @@ NuPusherHandler::releaseOurselves()
 // 停止推送，释放所有变量
 static void afterPlaying(void* clientData)
 {
-	if (clientData == NULL)
-		return;
+    if (clientData == NULL)
+        return;
 
-	NuPusherHandler *handler = (NuPusherHandler *)clientData;
-	handler->releaseOurselves();
+    NuPusherHandler *handler = (NuPusherHandler *)clientData;
+    handler->releaseOurselves();
 }
 
 // 注册回调
@@ -133,9 +137,9 @@ NuPusherHandler::connStateCallBack(int state, char* resultStr)
     }
 }
 
-NU_U32 
+NU_U32
 NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, int rtpOverTcp, char *username,
-    char *password, NU_MEDIA_INFO_T*  pstruStreamInfo, NU_U32 bufferKSize, NU_Bool createlogfile) 
+    char *password, NU_MEDIA_INFO_T*  pstruStreamInfo, NU_U32 bufferKSize, NU_Bool createlogfile)
 {
     fPort = port;
     fServerAddr = serverAddr;
@@ -149,7 +153,7 @@ NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, in
 
     ALOGDTRACE();
     fInjector = DarwinInjector::createNew(*fEnv);
-	fInjector->registerConnectStateCallBack(this);
+    fInjector->registerConnectStateCallBack(this);
     struct in_addr dummyDestAddress;
     dummyDestAddress.s_addr = 0;
     fVideoRtpGroupsock = new Groupsock(*fEnv, dummyDestAddress, 0, 0);
@@ -233,5 +237,39 @@ NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, in
     }
 
     ALOGD("Beginning to get camera video...\n");
+    return 0;
+}
+
+NU_U32
+NuPusherHandler::addFrame(NU_AV_Frame* frame)
+{
+    ALOGDTRACE();
+    if (fAvQueue == NULL) {
+        ALOGD("%s, -------------SSQ_Init CREATE fAvQueue\n", __FUNCTION__);
+        fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
+        SSQ_Init(fAvQueue, 0x00, fId, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
+        SSQ_Clear(fAvQueue);
+    }
+    MEDIA_FRAME_INFO frameInfo;
+    frameInfo.codec = frame->u32AVFrameFlag;
+    frameInfo.type = frame->u32VFrameType;
+    frameInfo.timestamp_sec = frame->u32TimestampSec;
+    frameInfo.timestamp_usec = frame->u32TimestampUsec;
+    frameInfo.length = frame->u32AVFrameLen;
+    frameInfo.channels = fPstruStreamInfo->u32AudioChannel;
+    frameInfo.sample_rate = fPstruStreamInfo->u32AudioSamplerate;
+    frameInfo.bits_per_sample = fPstruStreamInfo->u32AudioBitsPerSample;
+    frameInfo.channels = fPstruStreamInfo->u32AudioChannel;
+
+    ALOGD("%s, -------------0000\n", __FUNCTION__);
+    int ret = SSQ_AddData(fAvQueue, fId, MEDIA_TYPE_VIDEO, &frameInfo, (char *)frame->pBuffer);
+    ALOGD("%s, SSQ_AddData = %d\n", __FUNCTION__, ret);
+    return ret;
+}
+
+NU_U32
+NuPusherHandler::stopStream()
+{
+    releaseOurselves();
     return 0;
 }

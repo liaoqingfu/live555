@@ -87,5 +87,7 @@ NU_API NU_U32 NU_APICALL NuPusherRTSP_StopStream(NU_Pusher_Handle handle)
 NU_API NU_U32 NU_APICALL NuPusherRTSP_PushFrame(NU_Pusher_Handle handle, NU_AV_Frame* frame)
 {
     ALOGDTRACE();
+    if (handle)
+        return ((NuPusherHandler *)handle)->addFrame(frame);
     return NU_PUSH_STATE_ERROR;
 }

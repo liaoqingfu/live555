@@ -10,7 +10,14 @@
 #include <stdarg.h>
 #include "trace.h"
 
-int SSQ_Init(SS_QUEUE_OBJ_T* pObj, unsigned int sharememory, unsigned int channelid, wchar_t* sharename,
+#define LOG_TAG     "SSQUEUE"
+#include "utils/Log.h"
+
+#ifndef _DEBUG
+#define _DEBUG
+#endif
+
+int SSQ_Init(SS_QUEUE_OBJ_T* pObj, unsigned int sharememory, unsigned int channelid, const wchar_t* sharename,
     unsigned int bufsize, unsigned int prerecordsecs, unsigned int createsharememory)
 {
     wchar_t wszHeaderName[36] = {
@@ -207,6 +214,7 @@ int SSQ_SetClearFlag(SS_QUEUE_OBJ_T* pObj, unsigned int _flag)
     pObj->pQueHeader->clear_flag = _flag;
     return 0;
 }
+
 int SSQ_Clear(SS_QUEUE_OBJ_T* pObj)
 {
     if (NULL == pObj)
@@ -305,6 +313,7 @@ int SSQ_AddData(SS_QUEUE_OBJ_T* pObj, unsigned int channelid, unsigned int media
         return -1;
     }
 
+    ALOGDTRACE();
     WaitForSingleObject(pObj->hMutex, INFINITE); //Lock
 
     if (pObj->pQueHeader->clear_flag == 0x01) {
@@ -322,7 +331,8 @@ int SSQ_AddData(SS_QUEUE_OBJ_T* pObj, unsigned int channelid, unsigned int media
     }
 
     if (sizeof(SS_BUF_T) + frameinfo->length + pObj->pQueHeader->totalsize > pObj->pQueHeader->bufsize) {
-        SSQ_TRACE("超出缓冲区大小.. 帧长:%d\ttotalsize:%d\tbufsize:%d  缓存帧数:%d\n", frameinfo->length, pObj->pQueHeader->totalsize, pObj->pQueHeader->bufsize, pObj->pQueHeader->videoframes);
+        SSQ_TRACE("超出缓冲区大小.. 帧长:%d\ttotalsize:%d\tbufsize:%d  缓存帧数:%d\n", 
+            frameinfo->length, pObj->pQueHeader->totalsize, pObj->pQueHeader->bufsize, pObj->pQueHeader->videoframes);
         ReleaseMutex(pObj->hMutex);
         pObj->pQueHeader->isfull = 0x01;
         return -1;
@@ -361,8 +371,7 @@ int SSQ_AddData(SS_QUEUE_OBJ_T* pObj, unsigned int channelid, unsigned int media
             pObj->pQueHeader->videoframes++;
 
         //_TRACE("顺序新增..  writepos: %d   /   %d\n", pQueHeader->writepos, pQueHeader->size);
-    } else if (pObj->pQueHeader->writepos == pObj->pQueHeader->bufsize) //从头开始
-    {
+    } else if (pObj->pQueHeader->writepos == pObj->pQueHeader->bufsize) { //从头开始
         //记录帧位置
         if (mediatype == MEDIA_TYPE_VIDEO)
             SSQ_AddFrameInfo(pObj, 0, frameinfo);
@@ -496,6 +505,7 @@ int SSQ_AddData(SS_QUEUE_OBJ_T* pObj, unsigned int channelid, unsigned int media
 
     return ret;
 }
+
 int SSQ_GetData(SS_QUEUE_OBJ_T* pObj, unsigned int* channelid, unsigned int* mediatype, MEDIA_FRAME_INFO* frameinfo, char* pbuf)
 {
     int ret = 0;

@@ -1,9 +1,9 @@
 /*
-	Copyright (c) 2013-2014 EasyDarwin.ORG.  All rights reserved.
-	Github: https://github.com/EasyDarwin
-	WEChat: EasyDarwin
-	Website: http://www.easydarwin.org
-	Author: Gavin@easydarwin.org
+    Copyright (c) 2013-2014 EasyDarwin.ORG.  All rights reserved.
+    Github: https://github.com/EasyDarwin
+    WEChat: EasyDarwin
+    Website: http://www.easydarwin.org
+    Author: Gavin@easydarwin.org
 */
 #ifndef __SHARE_MEMORY_QUEUE_H__
 #define __SHARE_MEMORY_QUEUE_H__
@@ -118,17 +118,17 @@ typedef struct __SS_QUEUE_OBJ_T {
 #if defined(__cplusplus)
 extern "C" {
 #endif
-int SSQ_Init(SS_QUEUE_OBJ_T* pObj, unsigned int sharememory, unsigned int channelid, wchar_t* sharename, unsigned int bufsize, unsigned int prerecordsecs, unsigned int createsharememory);
-int SSQ_Deinit(SS_QUEUE_OBJ_T* pObj);
+    int SSQ_Init(SS_QUEUE_OBJ_T* pObj, unsigned int sharememory, unsigned int channelid, const wchar_t* sharename, unsigned int bufsize, unsigned int prerecordsecs, unsigned int createsharememory);
+    int SSQ_Deinit(SS_QUEUE_OBJ_T* pObj);
 
-int SSQ_SetClearFlag(SS_QUEUE_OBJ_T* pObj, int _flag);
-int SSQ_Clear(SS_QUEUE_OBJ_T* pObj);
-int SSQ_AddData(SS_QUEUE_OBJ_T* pObj, unsigned int channelid, unsigned int mediatype, MEDIA_FRAME_INFO* frameinfo, char* pbuf);
-int SSQ_GetData(SS_QUEUE_OBJ_T* pObj, unsigned int* channelid, unsigned int* mediatype, MEDIA_FRAME_INFO* frameinfo, char* pbuf);
-int SSQ_GetDataByPosition(SS_QUEUE_OBJ_T* pObj, unsigned int position, unsigned int clearflag, unsigned int* channelid, unsigned int* mediatype, MEDIA_FRAME_INFO* frameinfo, char* pbuf);
-int SSQ_AddFrameInfo(SS_QUEUE_OBJ_T* pObj, unsigned int _pos, MEDIA_FRAME_INFO* frameinfo);
+    int SSQ_SetClearFlag(SS_QUEUE_OBJ_T* pObj, int _flag);
+    int SSQ_Clear(SS_QUEUE_OBJ_T* pObj);
+    int SSQ_AddData(SS_QUEUE_OBJ_T* pObj, unsigned int channelid, unsigned int mediatype, MEDIA_FRAME_INFO* frameinfo, char* pbuf);
+    int SSQ_GetData(SS_QUEUE_OBJ_T* pObj, unsigned int* channelid, unsigned int* mediatype, MEDIA_FRAME_INFO* frameinfo, char* pbuf);
+    int SSQ_GetDataByPosition(SS_QUEUE_OBJ_T* pObj, unsigned int position, unsigned int clearflag, unsigned int* channelid, unsigned int* mediatype, MEDIA_FRAME_INFO* frameinfo, char* pbuf);
+    int SSQ_AddFrameInfo(SS_QUEUE_OBJ_T* pObj, unsigned int _pos, MEDIA_FRAME_INFO* frameinfo);
 
-int SSQ_TRACE(const char* szFormat, ...);
+    int SSQ_TRACE(const char* szFormat, ...);
 #if defined(__cplusplus)
 }
 #endif

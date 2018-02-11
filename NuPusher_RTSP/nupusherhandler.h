@@ -3,6 +3,7 @@
 
 #include "nupusher_rtsp_api.h"
 #include "nutypes.h"
+#include "ssqueue.h"
 
 #ifndef _DARWIN_INJECTOR_HH
 #include "DarwinInjector.hh"
@@ -21,7 +22,7 @@ public:
     NuPusherHandler();
     ~NuPusherHandler();
 	void    releaseOurselves();
-	NU_U32 startStream(char* serverAddr,
+	NU_U32  startStream(char* serverAddr,
         NU_U16 port,
         char* streamName,
         int rtpOverTcp, /*1-tcp, 2-udp*/
@@ -30,6 +31,8 @@ public:
         NU_MEDIA_INFO_T*  pstruStreamInfo,
         NU_U32 bufferKSize,
         NU_Bool createlogfile);
+    NU_U32  stopStream();
+    NU_U32  addFrame(NU_AV_Frame* frame);
 
     void    registerCallBack(NuPusherRTSP_Callback cb);
     void    setUserPointer(void *ptr);
@@ -53,7 +56,8 @@ private:
     NU_U16  fPort;
     NU_U32  fBufferKSize;
     NU_Bool fCreatelogfile;
-    NU_MEDIA_INFO_T*  fPstruStreamInfo;
+    NU_MEDIA_INFO_T*    fPstruStreamInfo;
+    SS_QUEUE_OBJ_T*     fAvQueue;
 
     UsageEnvironment *fEnv;	    //live555 global environment
     TaskScheduler* fScheduler;
