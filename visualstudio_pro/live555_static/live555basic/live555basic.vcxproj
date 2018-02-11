@@ -336,8 +336,10 @@
     <ClCompile Include="..\..\..\liveMedia\VP9VideoRTPSource.cpp" />
     <ClCompile Include="..\..\..\liveMedia\WAVAudioFileServerMediaSubsession.cpp" />
     <ClCompile Include="..\..\..\liveMedia\WAVAudioFileSource.cpp" />
-    <ClCompile Include="..\..\..\NuPusher_RTSP\NuPusherHandler.cpp" />
+    <ClCompile Include="..\..\..\NuPusher_RTSP\nupusherhandler.cpp" />
     <ClCompile Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.cpp" />
+    <ClCompile Include="..\..\..\NuPusher_RTSP\ssqueue.cpp" />
+    <ClCompile Include="..\..\..\NuPusher_RTSP\trace.cpp" />
     <ClCompile Include="..\..\..\UsageEnvironment\HashTable.cpp" />
     <ClCompile Include="..\..\..\UsageEnvironment\strDup.cpp" />
     <ClCompile Include="..\..\..\UsageEnvironment\UsageEnvironment.cpp" />
@@ -359,9 +361,11 @@
     <ClInclude Include="..\..\..\liveMedia\OggFileServerMediaSubsession.hh" />
     <ClInclude Include="..\..\..\liveMedia\rtcp_from_spec.h" />
     <ClInclude Include="..\..\..\liveMedia\StreamParser.hh" />
-    <ClInclude Include="..\..\..\NuPusher_RTSP\NuPusherHandler.h" />
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nupusherhandler.h" />
     <ClInclude Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.h" />
     <ClInclude Include="..\..\..\NuPusher_RTSP\nutypes.h" />
+    <ClInclude Include="..\..\..\NuPusher_RTSP\ssqueue.h" />
+    <ClInclude Include="..\..\..\NuPusher_RTSP\trace.h" />
     <ClInclude Include="..\..\..\NuPusher_RTSP\utils\Log.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -585,7 +585,13 @@
     <ClCompile Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\NuPusher_RTSP\NuPusherHandler.cpp">
+    <ClCompile Include="..\..\..\NuPusher_RTSP\ssqueue.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NuPusher_RTSP\trace.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NuPusher_RTSP\nupusherhandler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -638,16 +644,22 @@
     <ClInclude Include="..\..\..\liveMedia\StreamParser.hh">
       <Filter>源文件\liveMedia</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\NuPusher_RTSP\nutypes.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\NuPusher_RTSP\utils\Log.h">
       <Filter>头文件\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\NuPusher_RTSP\nupusher_rtsp_api.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\NuPusher_RTSP\NuPusherHandler.h">
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nutypes.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\ssqueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\trace.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NuPusher_RTSP\nupusherhandler.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

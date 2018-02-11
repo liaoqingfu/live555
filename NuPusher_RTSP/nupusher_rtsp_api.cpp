@@ -1,7 +1,7 @@
 #include "nupusher_rtsp_api.h"
 #include "nutypes.h"
 #include <stdio.h>
-#include "NuPusherHandler.h"
+#include "nupusherhandler.h"
 
 #define LOG_TAG                         "NUPUSHER_RTSP_API"
 #include "utils/Log.h"
