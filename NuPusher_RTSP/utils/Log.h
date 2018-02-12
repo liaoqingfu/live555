@@ -28,10 +28,11 @@
 #ifndef _LIBS_UTILS_LOG_H
 #define _LIBS_UTILS_LOG_H
 
+#define ALOGE(x, ...)           fprintf(stderr, "[E][%s] " x, LOG_TAG, ##__VA_ARGS__)
 #define LOCAL_LOG
 
 #ifdef LOCAL_LOG
-#define ALOGDTRACE()            printf("[D][%s]_Func[%s]\n", LOG_TAG, __FUNCTION__)
+#define ALOGDTRACE()            printf("[D][%s][%s]\n", LOG_TAG, __FUNCTION__)
 #define ALOGD(x, ...)           printf("[D][%s] " x, LOG_TAG, ##__VA_ARGS__)
 #else
 #define ALOGD(x, ...)

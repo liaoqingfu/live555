@@ -8,6 +8,7 @@
 #include "../liveMedia/MP3AudioMatroskaFileServerMediaSubsession.hh"
 #include "../liveMedia/include/NuVideoServerMediaSubsession.hh"
 #include "../liveMedia/include/NuH264VideoStreamFramer.hh"
+#include <windows.h>  
 
 #define LOG_TAG     "NUPUSHER_HANDLER"
 #include "utils/Log.h"
@@ -17,15 +18,16 @@ NuPusherHandler::NuPusherHandler()
     ALOGDTRACE();
     fScheduler = BasicTaskScheduler::createNew();
     fEnv = BasicUsageEnvironment::createNew(*fScheduler); 
+    fPushThread = new THREAD_OBJ();
+    fPushThread->flag = __THREAD_STATE::THREAD_STOP;
     fAvQueue = NULL;
-    //fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
-    //SSQ_Init(fAvQueue, 0x00, 0, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
-    //SSQ_Clear(fAvQueue);
 }
 
 NuPusherHandler::~NuPusherHandler()
 {
     releaseOurselves();
+    if (fPushThread)
+        delete fPushThread;
 }
 
 // 释放自己创建的资源
@@ -54,6 +56,12 @@ NuPusherHandler::releaseOurselves()
     if (fAudioSource != NULL)
         Medium::close(fAudioSource);
 
+    if (fAvQueue != NULL) {
+        SSQ_Clear(fAvQueue);
+        delete fAvQueue;
+        fAvQueue = NULL;
+    }
+
     delete fVideoRtpGroupsock;
     delete fAudioRtpGroupsock;
     fVideoRtpGroupsock = NULL;
@@ -62,12 +70,12 @@ NuPusherHandler::releaseOurselves()
 
 
 // 停止推送，释放所有变量
-static void afterPlaying(void* clientData)
+static void afterPlaying(void* handle)
 {
-    if (clientData == NULL)
+    if (handle == NULL)
         return;
 
-    NuPusherHandler *handler = (NuPusherHandler *)clientData;
+    NuPusherHandler *handler = (NuPusherHandler *)handle;
     handler->releaseOurselves();
 }
 
@@ -136,6 +144,16 @@ NuPusherHandler::connStateCallBack(int state, char* resultStr)
         break;
     }
 }
+LPTHREAD_START_ROUTINE NuPusherHandler::startPushThreadFunc(LPVOID _pParam)
+{
+    ALOGD("%s ---------------------------------------------start\n", __FUNCTION__);
+    NuPusherHandler *handle = (NuPusherHandler*)_pParam;
+    handle->fPushThread->flag = __THREAD_STATE::THREAD_START;
+    handle->fEventLoopWatchVariable = 0;
+    handle->fEnv->taskScheduler().doEventLoop(&handle->fEventLoopWatchVariable);
+    ALOGD("%s ---------------------------------------------end\n", __FUNCTION__);
+    return 0;
+}
 
 NU_U32
 NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, int rtpOverTcp, char *username,
@@ -162,81 +180,42 @@ NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, in
     fAudioRtpGroupsock = new Groupsock(*fEnv, dummyDestAddressAudio, 0, 0);
 
     unsigned char testRtpPayloadType = 96;
-    unsigned testEstBitrate = 0;
-    NuVideoServerMediaSubsession* nuVSubsession = NuVideoServerMediaSubsession::createNew(*fEnv, false);
-    RTPSink* nuRtpSink = nuVSubsession->createNewRTPSink(fVideoRtpGroupsock, testRtpPayloadType, NULL);
-    FramedSource* nuSource = nuVSubsession->createNewStreamSource(0, testEstBitrate);
-
-    const char* fileName = "Robotica_1080.mkv";
-    ALOGD("beforeCreateMediaSource, fileName = %s\n", fileName);
-    MatroskaDemuxCreationState creationState;
-    creationState.watchVariable = 0;
-
-    // 创建MatroskaFileServerDemux并parse it
-    MatroskaFileServerDemux::createNew(*fEnv, fileName, onMatroskaDemuxCreation, &creationState);
-    fEnv->taskScheduler().doEventLoop(&creationState.watchVariable);
-    MatroskaFileServerMediaSubsession* vSubsession;
-    if ((vSubsession = (MatroskaFileServerMediaSubsession *)creationState.demux->newServerMediaSubsession()) == NULL) {
-        ALOGD("MatroskaFileServerMediaSubsession creationState.demux->newServerMediaSubsession() failed!\n");
-        return -1;
-    }
-
-    MP3AudioMatroskaFileServerMediaSubsession* aSubsession;
-    if ((aSubsession = (MP3AudioMatroskaFileServerMediaSubsession *)creationState.demux->newServerMediaSubsession()) == NULL) {
-        ALOGD("MP3AudioMatroskaFileServerMediaSubsession creationState.demux->newServerMediaSubsession() failed! \n");
-        return -1;
-    }
-
+    NuVideoServerMediaSubsession *videoss = NuVideoServerMediaSubsession::createNew(*fEnv, this, false);
     unsigned estBitrate = 87543408;
-    FramedSource* vSource = vSubsession->createNewStreamSource(0, estBitrate);
-    if (vSource == NULL) {
-        ALOGD("MatroskaFileServerMediaSubsession subsession->createNewStreamSource(vSource) failed! exit...\n");
+    fVideoSource = videoss->createNewStreamSource(0, estBitrate);
+    if (fVideoSource == NULL) {
+        ALOGE("%s createNewStreamSource failed\n", __FUNCTION__);
         return -1;
     }
-
-    estBitrate = 500;
-    FramedSource* aSource = aSubsession->createNewStreamSource(0, estBitrate);
-    if (aSource == NULL) {
-        ALOGD("MP3AudioMatroskaFileServerMediaSubsession subsession->createNewStreamSource(aSource) failed! exit...\n");
-        return -1;
-    }
-
-    unsigned char rtpPayloadType = 96;  // video
-    fVideoSink = vSubsession->createNewRTPSink(fVideoRtpGroupsock, rtpPayloadType, NULL);
+    fVideoSink = videoss->createNewRTPSink(fVideoRtpGroupsock, testRtpPayloadType, NULL);
     if (fVideoSink == NULL) {
-        ALOGD("subsession->createNewRTPSink(vSink) failed! exit...\n");
-        return -1;
-    }
-
-    fAudioSink = aSubsession->createNewRTPSink(fAudioRtpGroupsock, rtpPayloadType + 1, NULL);
-    if (fAudioSink == NULL) {
-        ALOGD("subsession->createNewRTPSink(aSink) failed! exit... \n");
+        ALOGE("%s createNewRTPSink failed\n", __FUNCTION__);
         return -1;
     }
 
     // 将Video的RTPSink赋值给DarwinInjector，推送视频RTP给Darwin
     fInjector->addStream(fVideoSink, NULL);
-    fInjector->addStream(fAudioSink, NULL);
 
     // RTSP ANNOUNCE/SETUP/PLAY推送过程
-    if (!fInjector->setDestination("192.168.22.124", fStreamName, "live555", "LIVE555", 11554)) {
-        ALOGD("fInjector->setDestination() failed: %s\n", fEnv->getResultMsg());
+    if (!fInjector->setDestination(fServerAddr, fStreamName, "live555", "LIVE555", fPort)) {
+        ALOGE("fInjector->setDestination() failed: %s\n", fEnv->getResultMsg());
         return -1;
     }
 
     // 开始转发视频RTP数据
-    if ((fVideoSink != NULL) && (vSource != NULL)) {
-        ALOGD("fVideoSink->startPlaying\n");
-        fVideoSink->startPlaying(*vSource, afterPlaying, this);
+    if ((fVideoSink != NULL) && (fVideoSource != NULL)) {
+        ALOGE("fVideoSink->startPlaying\n");
+        fVideoSink->startPlaying(*fVideoSource, afterPlaying, this);
     }
 
-    // 开始转发音频RTP数据
-    if ((fAudioSink != NULL) && (aSource != NULL)) {
-        ALOGD("fAudioSink->startPlaying\n");
-        fAudioSink->startPlaying(*aSource, afterPlaying, this);
+    // 创建线程来推流
+    fPushThread->tHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)startPushThreadFunc, (LPVOID)this, 0, NULL); 
+    while (fPushThread->flag != __THREAD_STATE::THREAD_START) {
+        Sleep(100);
     }
 
-    ALOGD("Beginning to get camera video...\n");
+    if (NULL != fPushThread->tHandle)
+        SetThreadPriority(fPushThread->tHandle, THREAD_PRIORITY_HIGHEST);
     return 0;
 }
 
@@ -245,7 +224,7 @@ NuPusherHandler::addFrame(NU_AV_Frame* frame)
 {
     ALOGDTRACE();
     if (fAvQueue == NULL) {
-        ALOGD("%s, -------------SSQ_Init CREATE fAvQueue\n", __FUNCTION__);
+        ALOGE("%s, -------------SSQ_Init CREATE fAvQueue\n", __FUNCTION__);
         fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
         SSQ_Init(fAvQueue, 0x00, fId, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
         SSQ_Clear(fAvQueue);
@@ -261,15 +240,35 @@ NuPusherHandler::addFrame(NU_AV_Frame* frame)
     frameInfo.bits_per_sample = fPstruStreamInfo->u32AudioBitsPerSample;
     frameInfo.channels = fPstruStreamInfo->u32AudioChannel;
 
-    ALOGD("%s, -------------0000\n", __FUNCTION__);
-    int ret = SSQ_AddData(fAvQueue, fId, MEDIA_TYPE_VIDEO, &frameInfo, (char *)frame->pBuffer);
-    ALOGD("%s, SSQ_AddData = %d\n", __FUNCTION__, ret);
+    if (frame->u32AVFrameFlag == 1) {
+        ALOGE("%s add MEDIA_TYPE_VIDEO frame to Queue\n", __FUNCTION__);
+        int ret = SSQ_AddData(fAvQueue, fId, MEDIA_TYPE_VIDEO, &frameInfo, (char *)frame->pBuffer);
+        ALOGD("%s, SSQ_AddData ret = %d\n", __FUNCTION__, ret);
+        return ret;
+    } else {
+        ALOGE("%s MEDIA_TYPE = [%d] not add to Queue\n", __FUNCTION__, frame->u32AVFrameFlag);
+    }
+    return -1;
+}
+
+int
+NuPusherHandler::getFrame(unsigned int *channelid, unsigned int *mediatype, MEDIA_FRAME_INFO *frameinfo, char* pbuf)
+{
+    ALOGDTRACE();
+    if (fAvQueue == NULL)
+        return -1;
+
+    int ret = SSQ_GetData(fAvQueue, channelid, mediatype, frameinfo, pbuf);
+    ALOGD("%s, SSQ_GetData------- ret = %d\n", __FUNCTION__, ret);
     return ret;
 }
 
 NU_U32
 NuPusherHandler::stopStream()
 {
+    fEventLoopWatchVariable = -1; // exit doEventLoop
+    CloseHandle(fPushThread->tHandle);
+    fPushThread->flag = __THREAD_STATE::THREAD_STOP;
     releaseOurselves();
     return 0;
 }

@@ -167,6 +167,7 @@ void MultiFramedRTPSink::setFramePadding(unsigned numPaddingBytes)
 
 Boolean MultiFramedRTPSink::continuePlaying()
 {
+    envir() << "----------------------MultiFramedRTPSink::continuePlaying()\n";
     // Send the first packet.
     // (This will also schedule any future sends.)
     buildAndSendPacket(True);
@@ -185,6 +186,7 @@ void MultiFramedRTPSink::stopPlaying()
 
 void MultiFramedRTPSink::buildAndSendPacket(Boolean isFirstPacket)
 {
+    envir() << "----------------------MultiFramedRTPSink::buildAndSendPacket()\n";
     fIsFirstPacket = isFirstPacket;
 
     // Set up the RTP header:
@@ -217,8 +219,10 @@ void MultiFramedRTPSink::packFrame()
 {
     // Get the next frame.
 
+    envir() << "----------------------MultiFramedRTPSink::packFrame()\n";
     // First, see if we have an overflow frame that was too big for the last pkt
     if (fOutBuf->haveOverflowData()) {
+        envir() << "----------------------MultiFramedRTPSink::fOutBuf->haveOverflowData()\n";
         // Use this frame before reading a new one from the source
         unsigned frameSize = fOutBuf->overflowDataSize();
         struct timeval presentationTime = fOutBuf->overflowPresentationTime();
@@ -236,6 +240,7 @@ void MultiFramedRTPSink::packFrame()
         fOutBuf->skipBytes(fCurFrameSpecificHeaderSize);
         fTotalFrameSpecificHeaderSizes += fCurFrameSpecificHeaderSize;
 
+        envir() << "----------------------!!!MultiFramedRTPSink::fOutBuf->haveOverflowData()\n";
         fSource->getNextFrame(fOutBuf->curPtr(), fOutBuf->totalBytesAvailable(),
             afterGettingFrame, this, ourHandleClosure, this);
     }

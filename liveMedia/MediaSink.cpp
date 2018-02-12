@@ -68,14 +68,17 @@ Boolean MediaSink::startPlaying(MediaSource& source,
     afterPlayingFunc* afterFunc,
     void* afterClientData)
 {
+    envir() << "------------MediaSink startPlaying\n";
     // Make sure we're not already being played:
     if (fSource != NULL) {
+        envir() << "------------MediaSink This sink is already being played\n";
         envir().setResultMsg("This sink is already being played");
         return False;
     }
 
     // Make sure our source is compatible:
     if (!sourceIsCompatibleWithUs(source)) {
+        envir() << "------------MediaSink::startPlaying(): source is not compatible!\n";
         envir().setResultMsg("MediaSink::startPlaying(): source is not compatible!");
         return False;
     }

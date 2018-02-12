@@ -4,6 +4,7 @@
 #include "nupusher_rtsp_api.h"
 #include "nutypes.h"
 #include "ssqueue.h"
+#include "NuH264VideoStreamFramer.hh"
 
 #ifndef _DARWIN_INJECTOR_HH
 #include "DarwinInjector.hh"
@@ -17,7 +18,18 @@ class FramedSource;
 class RTPSink;
 class Groupsock;
 
-class NuPusherHandler : public IDarwinInjectorCallBack {
+typedef enum __THREAD_STATE {
+    THREAD_STOP = 0,
+    THREAD_START
+};
+
+typedef struct __THREAD_OBJ
+{
+    __THREAD_STATE  flag;
+    HANDLE          tHandle;
+} THREAD_OBJ;
+
+class NuPusherHandler : public IDarwinInjectorCallBack, public IVideoStreamFramerCallBack {
 public:
     NuPusherHandler();
     ~NuPusherHandler();
@@ -32,7 +44,9 @@ public:
         NU_U32 bufferKSize,
         NU_Bool createlogfile);
     NU_U32  stopStream();
+    // 添加一帧数据
     NU_U32  addFrame(NU_AV_Frame* frame);
+    // 获取一帧数据
 
     void    registerCallBack(NuPusherRTSP_Callback cb);
     void    setUserPointer(void *ptr);
@@ -40,8 +54,15 @@ public:
     void    setId(int id);
     int     getId();
 	virtual void connStateCallBack(int state, char* resultStr);
+    virtual int getFrame(unsigned int *channelid, unsigned int *mediatype, MEDIA_FRAME_INFO *frameinfo, char* pbuf);
+
+    static LPTHREAD_START_ROUTINE __stdcall startPushThreadFunc(LPVOID _pParam);
+
+    UsageEnvironment *fEnv;	    //live555 global environment
+    char fEventLoopWatchVariable;
 
 private:
+    THREAD_OBJ* fPushThread;
     NuPusherRTSP_Callback fUserCallBack;
     NU_Bool fIsPlaying;
 
@@ -59,9 +80,7 @@ private:
     NU_MEDIA_INFO_T*    fPstruStreamInfo;
     SS_QUEUE_OBJ_T*     fAvQueue;
 
-    UsageEnvironment *fEnv;	    //live555 global environment
     TaskScheduler* fScheduler;
-    char fEventLoopWatchVariable = 0;
 
     DarwinInjector* fInjector;  //DarwinInjector
     FramedSource* fVideoSource;

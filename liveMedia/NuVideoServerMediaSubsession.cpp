@@ -4,14 +4,15 @@
 #include <H264VideoRTPSink.hh>
 
 NuVideoServerMediaSubsession*
-NuVideoServerMediaSubsession::createNew(UsageEnvironment& env, Boolean reuseFirstSource)
+NuVideoServerMediaSubsession::createNew(UsageEnvironment& env, IVideoStreamFramerCallBack* streamFramerCallBack, Boolean reuseFirstSource)
 {
-    return new NuVideoServerMediaSubsession(env, reuseFirstSource);
+    return new NuVideoServerMediaSubsession(env, streamFramerCallBack, reuseFirstSource);
 }
 
-NuVideoServerMediaSubsession::NuVideoServerMediaSubsession(UsageEnvironment& env, Boolean reuseFirstSource)
+NuVideoServerMediaSubsession::NuVideoServerMediaSubsession(UsageEnvironment& env, IVideoStreamFramerCallBack* streamFramerCallBack, Boolean reuseFirstSource)
     : OnDemandServerMediaSubsession(env, reuseFirstSource)
 {
+    fStreamFramerCallBack = streamFramerCallBack;
 }
 
 NuVideoServerMediaSubsession::~NuVideoServerMediaSubsession()
@@ -22,7 +23,7 @@ FramedSource*
 NuVideoServerMediaSubsession::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate)
 {
     estBitrate = 96; // video
-    return NuH264VideoStreamFramer::createNew(envir(), NULL);
+    return NuH264VideoStreamFramer::createNew(envir(), NULL, fStreamFramerCallBack);
 }
 
 RTPSink*
