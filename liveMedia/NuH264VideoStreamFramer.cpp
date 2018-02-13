@@ -1,6 +1,7 @@
 #include "NuH264VideoStreamFramer.hh"
 #include "H264VideoRTPSource.hh"
 #include <GroupsockHelper.hh>
+
 #define LOG_TAG     "NU_H264_VIDEO_STREAM_FRAMER"
 #include "utils/Log.h"
 
@@ -39,6 +40,13 @@ NuH264VideoStreamFramer::~NuH264VideoStreamFramer()
 {
 }
 
+// redefined virtual functions, which called by sourceIsCompatibleWithUs
+Boolean
+NuH264VideoStreamFramer::isH264VideoStreamFramer() const
+{
+    return True;
+}
+
 void NuH264VideoStreamFramer::doGetNextFrame()
 {
     ALOGD("%s enter!!!!!!!!!!!!!!!!!!!!!!\n", __FUNCTION__);
@@ -56,6 +64,9 @@ void NuH264VideoStreamFramer::doGetNextFrame()
     int ret = fGetFrameCb->getFrame(&channelid, &mediatype, &frameinfo, pbuf);
     if (ret < 0) {
         ALOGE("%s Error, getFrame ret[%d] < 0\n", __FUNCTION__, ret);
+        delete[]pbuf;
+        pbuf = NULL;
+        afterGetting(this);
         return;
     }
 

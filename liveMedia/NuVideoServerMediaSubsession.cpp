@@ -10,7 +10,8 @@ NuVideoServerMediaSubsession::createNew(UsageEnvironment& env, IVideoStreamFrame
 }
 
 NuVideoServerMediaSubsession::NuVideoServerMediaSubsession(UsageEnvironment& env, IVideoStreamFramerCallBack* streamFramerCallBack, Boolean reuseFirstSource)
-    : OnDemandServerMediaSubsession(env, reuseFirstSource)
+    : OnDemandServerMediaSubsession(env, reuseFirstSource),
+    fEnv(env)
 {
     fStreamFramerCallBack = streamFramerCallBack;
 }

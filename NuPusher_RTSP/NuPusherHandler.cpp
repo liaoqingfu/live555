@@ -20,7 +20,9 @@ NuPusherHandler::NuPusherHandler()
     fEnv = BasicUsageEnvironment::createNew(*fScheduler); 
     fPushThread = new THREAD_OBJ();
     fPushThread->flag = __THREAD_STATE::THREAD_STOP;
-    fAvQueue = NULL;
+    fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
+    SSQ_Init(fAvQueue, 0x00, fId, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
+    SSQ_Clear(fAvQueue);
 }
 
 NuPusherHandler::~NuPusherHandler()
@@ -28,6 +30,12 @@ NuPusherHandler::~NuPusherHandler()
     releaseOurselves();
     if (fPushThread)
         delete fPushThread;
+
+    if (fAvQueue != NULL) {
+        SSQ_Deinit(fAvQueue);
+        delete fAvQueue;
+        fAvQueue = NULL;
+    }
 }
 
 // 释放自己创建的资源
@@ -58,8 +66,6 @@ NuPusherHandler::releaseOurselves()
 
     if (fAvQueue != NULL) {
         SSQ_Clear(fAvQueue);
-        delete fAvQueue;
-        fAvQueue = NULL;
     }
 
     delete fVideoRtpGroupsock;
@@ -150,6 +156,7 @@ LPTHREAD_START_ROUTINE NuPusherHandler::startPushThreadFunc(LPVOID _pParam)
     NuPusherHandler *handle = (NuPusherHandler*)_pParam;
     handle->fPushThread->flag = __THREAD_STATE::THREAD_START;
     handle->fEventLoopWatchVariable = 0;
+    Sleep(5000); // 等待帧被填充到缓冲队列里面
     handle->fEnv->taskScheduler().doEventLoop(&handle->fEventLoopWatchVariable);
     ALOGD("%s ---------------------------------------------end\n", __FUNCTION__);
     return 0;
@@ -223,12 +230,12 @@ NU_U32
 NuPusherHandler::addFrame(NU_AV_Frame* frame)
 {
     ALOGDTRACE();
-    if (fAvQueue == NULL) {
-        ALOGE("%s, -------------SSQ_Init CREATE fAvQueue\n", __FUNCTION__);
-        fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
-        SSQ_Init(fAvQueue, 0x00, fId, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
-        SSQ_Clear(fAvQueue);
-    }
+    //if (fAvQueue == NULL) {
+    //    ALOGE("%s, -------------SSQ_Init CREATE fAvQueue\n", __FUNCTION__);
+    //    fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
+    //    SSQ_Init(fAvQueue, 0x00, fId, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
+    //    SSQ_Clear(fAvQueue);
+    //}
     MEDIA_FRAME_INFO frameInfo;
     frameInfo.codec = frame->u32AVFrameFlag;
     frameInfo.type = frame->u32VFrameType;
@@ -259,6 +266,11 @@ NuPusherHandler::getFrame(unsigned int *channelid, unsigned int *mediatype, MEDI
         return -1;
 
     int ret = SSQ_GetData(fAvQueue, channelid, mediatype, frameinfo, pbuf);
+    ALOGD("%s---->framesize = %d\n", fAvQueue->pQueHeader->videoframes);
+    if (fAvQueue->pQueHeader->videoframes > 30) {
+        ALOGD("[ch%d]缓存帧数[%d]>设定帧数[%d].  清空队列并等待下一个Key frame.\n", channelid, fAvQueue->pQueHeader->videoframes, 30);
+        SSQ_Clear(fAvQueue);
+    }
     ALOGD("%s, SSQ_GetData------- ret = %d\n", __FUNCTION__, ret);
     return ret;
 }

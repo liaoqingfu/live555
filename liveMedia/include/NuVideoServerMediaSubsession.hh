@@ -17,6 +17,7 @@ public:
     virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock, unsigned char rtpPayloadTypeIfDynamic, FramedSource* inputSource);
 
 private:
+    UsageEnvironment& fEnv;
     NuVideoServerMediaSubsession(UsageEnvironment& env, IVideoStreamFramerCallBack* streamFramerCallBack, Boolean reuseFirstSource);
     virtual ~NuVideoServerMediaSubsession();
     IVideoStreamFramerCallBack* fStreamFramerCallBack;

@@ -24,7 +24,7 @@ protected:
     virtual ~NuH264VideoStreamFramer();
 
     // redefined virtual functions:
-    virtual Boolean isNuH264VideoStreamFramer() const { return True; }
+    virtual Boolean isH264VideoStreamFramer() const;
     virtual void doGetNextFrame();
 
 private:
