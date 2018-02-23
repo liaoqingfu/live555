@@ -49,7 +49,6 @@ NuH264VideoStreamFramer::isH264VideoStreamFramer() const
 
 void NuH264VideoStreamFramer::doGetNextFrame()
 {
-    ALOGD("%s enter!!!!!!!!!!!!!!!!!!!!!!\n", __FUNCTION__);
     ALOGDTRACE();
     if (fGetFrameCb == NULL) {
         ALOGE("%s Error, fGetFrameCb is NULL\n", __FUNCTION__);
@@ -66,6 +65,7 @@ void NuH264VideoStreamFramer::doGetNextFrame()
         ALOGE("%s Error, getFrame ret[%d] < 0\n", __FUNCTION__, ret);
         delete[]pbuf;
         pbuf = NULL;
+        //fFrameSize = 0;
         afterGetting(this);
         return;
     }

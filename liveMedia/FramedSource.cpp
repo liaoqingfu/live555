@@ -67,6 +67,7 @@ void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
     onCloseFunc* onCloseFunc,
     void* onCloseClientData)
 {
+    envir() << "FramedSource[" << this << "]::getNextFrame() enter\n";
     // Make sure we're not already being read:
     if (fIsCurrentlyAwaitingData) {
         envir() << "FramedSource[" << this << "]::getNextFrame(): attempting to read more than once at the same time!\n";

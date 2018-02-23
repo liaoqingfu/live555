@@ -240,7 +240,7 @@ void MultiFramedRTPSink::packFrame()
         fOutBuf->skipBytes(fCurFrameSpecificHeaderSize);
         fTotalFrameSpecificHeaderSizes += fCurFrameSpecificHeaderSize;
 
-        envir() << "----------------------!!!MultiFramedRTPSink::fOutBuf->haveOverflowData()\n";
+        envir() << "----------------------MultiFramedRTPSink::fOutBuf->haveOverflowData() is false\n";
         fSource->getNextFrame(fOutBuf->curPtr(), fOutBuf->totalBytesAvailable(),
             afterGettingFrame, this, ourHandleClosure, this);
     }
@@ -252,6 +252,7 @@ void MultiFramedRTPSink ::afterGettingFrame(void* clientData, unsigned numBytesR
     unsigned durationInMicroseconds)
 {
     MultiFramedRTPSink* sink = (MultiFramedRTPSink*)clientData;
+    sink->envir() << "----------------------MultiFramedRTPSink::afterGettingFrame\n";
     sink->afterGettingFrame1(numBytesRead, numTruncatedBytes,
         presentationTime, durationInMicroseconds);
 }
@@ -260,6 +261,7 @@ void MultiFramedRTPSink ::afterGettingFrame1(unsigned frameSize, unsigned numTru
     struct timeval presentationTime,
     unsigned durationInMicroseconds)
 {
+    envir() << "----------------------MultiFramedRTPSink::afterGettingFrame1()\n";
     if (fIsFirstPacket) {
         // Record the fact that we're starting to play now:
         gettimeofday(&fNextSendTime, NULL);
@@ -443,6 +445,7 @@ void MultiFramedRTPSink::sendPacketIfNecessary()
 void MultiFramedRTPSink::sendNext(void* firstArg)
 {
     MultiFramedRTPSink* sink = (MultiFramedRTPSink*)firstArg;
+    sink->envir() << "----------------------MultiFramedRTPSink::sendNext()\n";
     sink->buildAndSendPacket(False);
 }
 
@@ -451,6 +454,7 @@ void MultiFramedRTPSink::ourHandleClosure(void* clientData)
     MultiFramedRTPSink* sink = (MultiFramedRTPSink*)clientData;
     // There are no frames left, but we may have a partially built packet
     //  to send
+    sink->envir() << "----------------------MultiFramedRTPSink::fOutBuf->haveOverflowData()\n";
     sink->fNoFramesLeft = True;
     sink->sendPacketIfNecessary();
 }

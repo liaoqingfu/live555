@@ -183,12 +183,15 @@ H264or5Fragmenter::~H264or5Fragmenter()
 
 void H264or5Fragmenter::doGetNextFrame()
 {
+    envir() << "----------------------H264or5Fragmenter::doGetNextFrame enter!\n";
     if (fNumValidDataBytes == 1) {
+        envir() << "----------------------H264or5Fragmenter::doGetNextFrame fNumValidDataBytes == 1!\n";
         // We have no NAL unit data currently in the buffer.  Read a new one:
         fInputSource->getNextFrame(&fInputBuffer[1], fInputBufferSize - 1,
             afterGettingFrame, this,
             FramedSource::handleClosure, this);
     } else {
+        envir() << "----------------------H264or5Fragmenter::doGetNextFrame fNumValidDataBytes != 1!\n";
         // We have NAL unit data in the buffer.  There are three cases to consider:
         // 1. There is a new NAL unit in the buffer, and it's small enough to deliver
         //    to the RTP sink (as is).

@@ -7,7 +7,6 @@
 
 #include "ssqueue.h"
 
-
 class IVideoStreamFramerCallBack {
 public:
     // 连接状态回调

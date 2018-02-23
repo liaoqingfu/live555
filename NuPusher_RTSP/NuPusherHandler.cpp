@@ -156,7 +156,16 @@ LPTHREAD_START_ROUTINE NuPusherHandler::startPushThreadFunc(LPVOID _pParam)
     NuPusherHandler *handle = (NuPusherHandler*)_pParam;
     handle->fPushThread->flag = __THREAD_STATE::THREAD_START;
     handle->fEventLoopWatchVariable = 0;
-    Sleep(5000); // 等待帧被填充到缓冲队列里面
+    while (handle->fAvQueue->pQueHeader->videoframes <= 0) { // 等待帧被填充到缓冲队列里面
+        ALOGD("%s ---------------------------------------------start000000\n", __FUNCTION__);
+        Sleep(100);
+    }
+    // 开始转发视频RTP数据
+    if ((handle->fVideoSink != NULL) && (handle->fVideoSource != NULL)) {
+        ALOGE("fVideoSink->startPlaying\n");
+        handle->fVideoSink->startPlaying(*handle->fVideoSource, afterPlaying, handle);
+    }
+    ALOGD("%s ---------------------------------------------start111111\n", __FUNCTION__);
     handle->fEnv->taskScheduler().doEventLoop(&handle->fEventLoopWatchVariable);
     ALOGD("%s ---------------------------------------------end\n", __FUNCTION__);
     return 0;
@@ -166,6 +175,8 @@ NU_U32
 NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, int rtpOverTcp, char *username,
     char *password, NU_MEDIA_INFO_T*  pstruStreamInfo, NU_U32 bufferKSize, NU_Bool createlogfile)
 {
+    ALOGDTRACE();
+
     fPort = port;
     fServerAddr = serverAddr;
     fUsername = username;
@@ -176,7 +187,6 @@ NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, in
     fCreatelogfile = createlogfile;
     fPstruStreamInfo = pstruStreamInfo;
 
-    ALOGDTRACE();
     fInjector = DarwinInjector::createNew(*fEnv);
     fInjector->registerConnectStateCallBack(this);
     struct in_addr dummyDestAddress;
@@ -210,10 +220,10 @@ NuPusherHandler::startStream(char* serverAddr, NU_U16 port, char* streamName, in
     }
 
     // 开始转发视频RTP数据
-    if ((fVideoSink != NULL) && (fVideoSource != NULL)) {
-        ALOGE("fVideoSink->startPlaying\n");
-        fVideoSink->startPlaying(*fVideoSource, afterPlaying, this);
-    }
+    //if ((fVideoSink != NULL) && (fVideoSource != NULL)) {
+    //    ALOGE("fVideoSink->startPlaying\n");
+    //    fVideoSink->startPlaying(*fVideoSource, afterPlaying, this);
+    //}
 
     // 创建线程来推流
     fPushThread->tHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)startPushThreadFunc, (LPVOID)this, 0, NULL); 
@@ -230,12 +240,6 @@ NU_U32
 NuPusherHandler::addFrame(NU_AV_Frame* frame)
 {
     ALOGDTRACE();
-    //if (fAvQueue == NULL) {
-    //    ALOGE("%s, -------------SSQ_Init CREATE fAvQueue\n", __FUNCTION__);
-    //    fAvQueue = new SS_QUEUE_OBJ_T(); // 帧缓冲队列
-    //    SSQ_Init(fAvQueue, 0x00, fId, TEXT(""), MAX_AVQUEUE_SIZE, 2, 0x01);
-    //    SSQ_Clear(fAvQueue);
-    //}
     MEDIA_FRAME_INFO frameInfo;
     frameInfo.codec = frame->u32AVFrameFlag;
     frameInfo.type = frame->u32VFrameType;
@@ -247,6 +251,7 @@ NuPusherHandler::addFrame(NU_AV_Frame* frame)
     frameInfo.bits_per_sample = fPstruStreamInfo->u32AudioBitsPerSample;
     frameInfo.channels = fPstruStreamInfo->u32AudioChannel;
 
+    return SSQ_AddData(fAvQueue, fId, MEDIA_TYPE_VIDEO, &frameInfo, (char *)frame->pBuffer);
     if (frame->u32AVFrameFlag == 1) {
         ALOGE("%s add MEDIA_TYPE_VIDEO frame to Queue\n", __FUNCTION__);
         int ret = SSQ_AddData(fAvQueue, fId, MEDIA_TYPE_VIDEO, &frameInfo, (char *)frame->pBuffer);
@@ -266,11 +271,11 @@ NuPusherHandler::getFrame(unsigned int *channelid, unsigned int *mediatype, MEDI
         return -1;
 
     int ret = SSQ_GetData(fAvQueue, channelid, mediatype, frameinfo, pbuf);
-    ALOGD("%s---->framesize = %d\n", fAvQueue->pQueHeader->videoframes);
-    if (fAvQueue->pQueHeader->videoframes > 30) {
-        ALOGD("[ch%d]缓存帧数[%d]>设定帧数[%d].  清空队列并等待下一个Key frame.\n", channelid, fAvQueue->pQueHeader->videoframes, 30);
-        SSQ_Clear(fAvQueue);
-    }
+    //ALOGD("%s---->framesize = %d\n", fAvQueue->pQueHeader->videoframes);
+    //if (fAvQueue->pQueHeader->videoframes > 30) {
+    //    ALOGD("[ch%d]缓存帧数[%d]>设定帧数[%d].  清空队列并等待下一个Key frame.\n", channelid, fAvQueue->pQueHeader->videoframes, 30);
+    //    SSQ_Clear(fAvQueue);
+    //}
     ALOGD("%s, SSQ_GetData------- ret = %d\n", __FUNCTION__, ret);
     return ret;
 }
